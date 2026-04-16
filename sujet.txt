@@ -1,0 +1,43 @@
+Resaka VISA
+(carte resident,sans donné anterieur )
+-misy VISA transformable 
+-rehefa manao demande VISA(ilay manana visa transformable azo avy any ivelany avany). Any amin'ny ministere de l'interieur no atao
+
+Sprint1:-application afaka anaovana ny demande de VISA hafa (etudiant,travailleur ihany)
+	-alaina ny information momba anle VISA transformable sy ilay VISA ho angatahana sy ny information ilaina(etat civile).
+	-lors de la saisi; misy type hoe:
+		+(1)demande nouveau titre
+		+(2)transfert VISA: cas niova passeport
+		+(3)duplicata carte residant
+
+NB:	-Misy date expiration ilay VISA transformable, ao anatin'ilay periode de validite an'ilay transformable no afaka manao demande VISA
+	-Misy Statut miovaova
+	-rehefa saisi, pour (1) et (2), dans les cas ou tsy misy donne ho an'ireo (sans donne anterieur zany) dia raisina otran hoe nouveau type
+
+/////////PRINCI//////// 
+
+Formulaire: demande visa transformable 
+Etat civil: nom, prénom, situation familiale,adresse,profesion, contact, nationalite, passeport (numero, date délivrance, date d'expiration)...
+ Type:    Travailleur | Investisseur
+
+Visa Transformable: Date d'entré a Mada (ex:Nosy Be) , Date sortie (reference), Date d'expiration,
+
+Sprint1: Formulaire nouveau titre
+
+
+
+raha tsy coché ny piece justificative obligatoire  dia tsy cree le dossier (dossier crée na demamande crée ny statut ambany ndrindra)
+raha tsy coché ny PJ option dia tsy afaka miova statut ilay dossier 
+titre visa sy carte sejour no azo amin farany de liena amin demamnde
+
+
+
+SPRINT 2 : le sans donné anterieur 
+SPRINT 3 : scan terminé (rehefa feno daholo ny PJ rehetra )
+
+Tables : 
+Situation Familiale (libelle)
+Nationalite (libelle )
+Demandeur ( nom , prenom(Opt) , dtn , situation familiale FK, adresse mada, Nationalite FK)
+Demande (date)
+Passport ( )
