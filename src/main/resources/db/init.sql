@@ -1,26 +1,35 @@
--- =========================
--- TABLES DE RÉFÉRENCE (À créer en premier)
--- =========================
+-- ==========================================================
+-- 1. TABLES DE RÉFÉRENCE (PARAMÉTRAGE)
+-- ==========================================================
 
-CREATE TABLE situation_familiale (
+CREATE TABLE Nationalite (
     id SERIAL PRIMARY KEY,
     libelle VARCHAR(50) NOT NULL
 );
 
-CREATE TABLE nationalite (
-    id SERIAL PRIMARY KEY,
-    libelle VARCHAR(100) NOT NULL
-);
-
-CREATE TABLE type_demande (
+CREATE TABLE Situation_familiale (
     id SERIAL PRIMARY KEY,
     libelle VARCHAR(50) NOT NULL
 );
 
-CREATE TABLE statut (
-    code INT PRIMARY KEY,
-    libelle VARCHAR(50) NOT NULL
+CREATE TABLE type_visa (
+    id SERIAL PRIMARY KEY,
+    libelle VARCHAR(50) NOT NULL 
 );
+
+INSERT INTO type_visa (libelle) VALUES 
+('investisseur'),
+('travailleur');
+
+CREATE TABLE Type_demande (
+    id SERIAL PRIMARY KEY,
+    libelle VARCHAR(50) NOT NULL  
+);
+
+INSERT INTO Type_demande (id, libelle) VALUES 
+(1, 'Demande nouveau titre'),
+(2, 'Transfert VISA'),
+(3, 'Duplicata carte residant');
 
 CREATE TABLE piece_justificative (
     id SERIAL PRIMARY KEY,
@@ -28,79 +37,146 @@ CREATE TABLE piece_justificative (
     obligatoire BOOLEAN DEFAULT FALSE
 );
 
--- =========================
--- DEMANDEUR
--- =========================
+-- ==========================================================
+-- 2. RÉFÉRENTIELS DE STATUTS (LOGIQUE 1, 11, 21...)
+-- ==========================================================
 
-CREATE TABLE demandeur (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(20) UNIQUE,
-    nom VARCHAR(100) NOT NULL,
-    prenom VARCHAR(100),
-    date_naissance DATE NOT NULL,
-    adresse VARCHAR(255),
-    profession VARCHAR(100),
-    contact VARCHAR(50),
-    
-    situation_familiale_id INT REFERENCES situation_familiale(id),
-    nationalite_id INT REFERENCES nationalite(id)
+CREATE TABLE Ref_Statut_Demande (
+    code INT PRIMARY KEY,
+    libelle VARCHAR(50) NOT NULL
 );
 
--- =========================
--- PASSPORT
--- =========================
+INSERT INTO Ref_Statut_Demande (code, libelle) VALUES 
+(1,  'Créée'),
+(11, 'En attente'),
+(21, 'En cours de traitement'),
+(31, 'Validée'),
+(41, 'Rejetée');
 
-CREATE TABLE passport (
+CREATE TABLE Ref_Statut_Passeport (
+    code INT PRIMARY KEY,
+    libelle VARCHAR(50) NOT NULL
+);
+
+INSERT INTO Ref_Statut_Passeport (code, libelle) VALUES 
+(1,  'Actif'),
+(11, 'Expiré'),
+(21, 'Perdu'),
+(31, 'Volé');
+
+-- ==========================================================
+-- 3. TABLES ACTEURS ET IDENTITÉ
+-- ==========================================================
+
+CREATE TABLE Demandeur (
     id SERIAL PRIMARY KEY,
-    code VARCHAR(20) UNIQUE,
-    numero VARCHAR(50) UNIQUE NOT NULL,
+    nom VARCHAR(50) NOT NULL,
+    prenom VARCHAR(50) NOT NULL,
+    date_naissance DATE NOT NULL,
+    lieu_naissance VARCHAR(100) NOT NULL,
+    telephone VARCHAR(20) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    adresse TEXT NOT NULL,
+    id_situation_familiale INT NOT NULL,
+    id_nationalite INT NOT NULL,
+    CONSTRAINT fk_demandeur_situation FOREIGN KEY (id_situation_familiale) REFERENCES Situation_familiale(id),
+    CONSTRAINT fk_demandeur_nationalite FOREIGN KEY (id_nationalite) REFERENCES Nationalite(id)
+);
+
+CREATE TABLE Passeport (
+    id SERIAL PRIMARY KEY,
+    id_demandeur INT NOT NULL,
+    numero_passeport VARCHAR(50) NOT NULL UNIQUE,
     date_delivrance DATE NOT NULL,
     date_expiration DATE NOT NULL,
-    
-    demandeur_id INT NOT NULL REFERENCES demandeur(id) ON DELETE CASCADE
+    pays_delivrance VARCHAR(100),
+    id_statut_actuel INT NOT NULL DEFAULT 1, 
+    CONSTRAINT fk_passeport_demandeur FOREIGN KEY (id_demandeur) REFERENCES Demandeur(id),
+    CONSTRAINT fk_passeport_statut FOREIGN KEY (id_statut_actuel) REFERENCES Ref_Statut_Passeport(code)
 );
 
--- =========================
--- VISA TRANSFORMABLE
--- =========================
-
-CREATE TABLE visa_transformable (
+-- Table Historique pour les Passeports (Ajoutée)
+CREATE TABLE Historique_Statut_Passeport (
     id SERIAL PRIMARY KEY,
-    code VARCHAR(20) UNIQUE,
-    numero_visa VARCHAR(50) UNIQUE NOT NULL,
-    date_entree DATE NOT NULL,
-    date_sortie DATE,
-    date_expiration DATE NOT NULL,
-    lieu_entree VARCHAR(100),
-    
-    ancien_passport_id INT REFERENCES passport(id)
+    id_passeport INT NOT NULL,
+    code_statut INT NOT NULL,
+    date_changement_statut TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_hist_passeport FOREIGN KEY (id_passeport) REFERENCES Passeport(id) ON DELETE CASCADE,
+    CONSTRAINT fk_hist_statut_p_ref FOREIGN KEY (code_statut) REFERENCES Ref_Statut_Passeport(code)
 );
 
--- =========================
--- DEMANDE
--- =========================
+-- ==========================================================
+-- 4. GESTION DES DEMANDES ET VISAS
+-- ==========================================================
 
-CREATE TABLE demande (
+CREATE TABLE Visa_transformable (
     id SERIAL PRIMARY KEY,
-    code VARCHAR(20) UNIQUE,
-    date_demande DATE DEFAULT CURRENT_DATE,
-    
-    type_demande_id INT NOT NULL REFERENCES type_demande(id),
-    demandeur_id INT NOT NULL REFERENCES demandeur(id),
-    nouveau_passport_id INT REFERENCES passport(id),
-    visa_transformable_id INT REFERENCES visa_transformable(id),
-    statut_code INT NOT NULL REFERENCES statut(code)
+    id_demandeur INT NOT NULL,
+    id_passeport INT NOT NULL,
+    numero_reference VARCHAR(50) NOT NULL UNIQUE,
+    CONSTRAINT fk_visa_trans_demandeur FOREIGN KEY (id_demandeur) REFERENCES Demandeur(id),
+    CONSTRAINT fk_visa_trans_passeport FOREIGN KEY (id_passeport) REFERENCES Passeport(id)
 );
 
--- =========================
--- LIAISON DEMANDE - PIECES
--- =========================
+CREATE TABLE Demande (
+    id SERIAL PRIMARY KEY,
+    id_visa_transformable INT NOT NULL,
+    date_demande DATE NOT NULL DEFAULT CURRENT_DATE,
+    id_statut INT NOT NULL DEFAULT 1, 
+    id_demandeur INT NOT NULL,
+    id_type_visa INT NOT NULL,
+    id_type_demande INT NOT NULL,
+    date_traitement DATE,
+    CONSTRAINT fk_demande_statut FOREIGN KEY (id_statut) REFERENCES Ref_Statut_Demande(code),
+    CONSTRAINT fk_demande_type_demande FOREIGN KEY (id_type_demande) REFERENCES Type_demande(id),
+    CONSTRAINT fk_demande_demandeur FOREIGN KEY (id_demandeur) REFERENCES Demandeur(id),
+    CONSTRAINT fk_demande_type_visa FOREIGN KEY (id_type_visa) REFERENCES Type_visa(id),
+    CONSTRAINT fk_demande_visa_trans FOREIGN KEY (id_visa_transformable) REFERENCES Visa_transformable(id)
+);
+
+CREATE TABLE Visa (
+    id SERIAL PRIMARY KEY,
+    id_demande INT NOT NULL,
+    reference VARCHAR(50),
+    date_debut DATE NOT NULL,
+    date_fin DATE NOT NULL,
+    id_passeport INT NOT NULL,
+    CONSTRAINT fk_visa_demande FOREIGN KEY (id_demande) REFERENCES Demande(id),
+    CONSTRAINT fk_visa_passeport FOREIGN KEY (id_passeport) REFERENCES Passeport(id)
+);
+
+CREATE TABLE carte_resident (
+    id SERIAL PRIMARY KEY,
+    id_demande INT NOT NULL,
+    reference VARCHAR(50),
+    date_debut DATE NOT NULL,
+    date_fin DATE NOT NULL,
+    id_passeport INT NOT NULL,
+    CONSTRAINT fk_carte_demande FOREIGN KEY (id_demande) REFERENCES Demande(id),
+    CONSTRAINT fk_carte_passeport FOREIGN KEY (id_passeport) REFERENCES Passeport(id)
+);
+
+-- ==========================================================
+-- 5. SUIVI ET PIÈCES JOINTES
+-- ==========================================================
 
 CREATE TABLE demande_piece (
     id SERIAL PRIMARY KEY,
-    fichier VARCHAR(255),
+    demande_id INT NOT NULL,
+    piece_id INT NOT NULL,
+    fichier VARCHAR(255), 
     est_fourni BOOLEAN DEFAULT FALSE,
-    
-    demande_id INT NOT NULL REFERENCES demande(id) ON DELETE CASCADE,
-    piece_id INT NOT NULL REFERENCES piece_justificative(id)
+    date_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_piece_demande FOREIGN KEY (demande_id) REFERENCES Demande(id) ON DELETE CASCADE,
+    CONSTRAINT fk_piece_ref FOREIGN KEY (piece_id) REFERENCES piece_justificative(id),
+    UNIQUE (demande_id, piece_id)
+);
+
+CREATE TABLE Historique_Statut_Demande (
+    id SERIAL PRIMARY KEY,
+    id_demande INT NOT NULL,
+    code_statut INT NOT NULL,
+    date_changement TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_hist_demande FOREIGN KEY (id_demande) REFERENCES Demande(id) ON DELETE CASCADE,
+    CONSTRAINT fk_hist_statut_d_ref FOREIGN KEY (code_statut) REFERENCES Ref_Statut_Demande(code)
 );
