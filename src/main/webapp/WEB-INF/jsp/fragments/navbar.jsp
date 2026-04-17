@@ -1,6 +1,1 @@
-<nav class="navbar">
-    <a href="/" class="nav-link">Accueil</a>
-    <a href="#" class="nav-link">Demandeurs</a>
-    <a href="#" class="nav-link">Passeports</a>
-    <a href="#" class="nav-link">Demandes</a>
-</nav>
+<%-- Ce fichier est conservé pour compatibilité mais le navbar est désormais intégré dans le topbar (header.jsp) --%>
