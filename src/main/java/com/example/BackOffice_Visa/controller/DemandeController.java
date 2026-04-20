@@ -166,6 +166,8 @@ public class DemandeController {
             @RequestParam("dateDelivrance") LocalDate dateDelivrance,
             @RequestParam("dateExpiration") LocalDate dateExpiration,
             @RequestParam("paysDelivrance") String paysDelivrance,
+            @RequestParam("dateDebutVisaTransformable") LocalDate dateDebutVisaTransformable,
+            @RequestParam("dateExpirationVisaTransformable") LocalDate dateExpirationVisaTransformable,
             @RequestParam("numeroReferenceVisaTransformable") String numeroReferenceVisaTransformable,
             RedirectAttributes redirectAttributes) {
 
@@ -173,9 +175,23 @@ public class DemandeController {
                 || !StringUtils.hasText(paysDelivrance)
                 || !StringUtils.hasText(numeroReferenceVisaTransformable)
                 || dateDelivrance == null
-                || dateExpiration == null) {
+                || dateExpiration == null
+                || dateDebutVisaTransformable == null
+                || dateExpirationVisaTransformable == null) {
             redirectAttributes.addFlashAttribute("errorMessage",
                     "Veuillez compléter les informations du passeport et du visa transformable.");
+            return "redirect:/demandes/nouveau?step=2";
+        }
+
+        if (dateExpiration.isBefore(dateDelivrance)) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "La date d'expiration du passeport doit être postérieure à la date de délivrance.");
+            return "redirect:/demandes/nouveau?step=2";
+        }
+
+        if (dateExpirationVisaTransformable.isBefore(dateDebutVisaTransformable)) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "La date d'expiration du visa transformable doit être postérieure à sa date de début.");
             return "redirect:/demandes/nouveau?step=2";
         }
 
@@ -183,6 +199,8 @@ public class DemandeController {
         wizard.setDateDelivrance(dateDelivrance);
         wizard.setDateExpiration(dateExpiration);
         wizard.setPaysDelivrance(paysDelivrance);
+        wizard.setDateDebutVisaTransformable(dateDebutVisaTransformable);
+        wizard.setDateExpirationVisaTransformable(dateExpirationVisaTransformable);
         wizard.setNumeroReferenceVisaTransformable(numeroReferenceVisaTransformable);
 
         return "redirect:/demandes/nouveau?step=3";
@@ -217,6 +235,8 @@ public class DemandeController {
                 || wizard.getDateDelivrance() == null
                 || wizard.getDateExpiration() == null
                 || !StringUtils.hasText(wizard.getPaysDelivrance())
+                || wizard.getDateDebutVisaTransformable() == null
+                || wizard.getDateExpirationVisaTransformable() == null
                 || !StringUtils.hasText(wizard.getNumeroReferenceVisaTransformable())) {
             redirectAttributes.addFlashAttribute("errorMessage",
                     "Étape 2 incomplète : veuillez renseigner le passeport et le visa transformable.");
@@ -262,6 +282,8 @@ public class DemandeController {
         VisaTransformable visaTransformable = new VisaTransformable();
         visaTransformable.setDemandeur(savedDemandeur);
         visaTransformable.setPasseport(savedPasseport);
+        visaTransformable.setDateDebut(wizard.getDateDebutVisaTransformable());
+        visaTransformable.setDateExpiration(wizard.getDateExpirationVisaTransformable());
         visaTransformable.setNumeroReference(wizard.getNumeroReferenceVisaTransformable());
         VisaTransformable savedVisaTransformable = visaTransformableService.save(visaTransformable);
 

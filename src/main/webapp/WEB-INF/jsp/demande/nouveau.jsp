@@ -122,6 +122,14 @@
                                 <label for="numeroReferenceVisaTransformable">Référence visa transformable</label>
                                 <input id="numeroReferenceVisaTransformable" name="numeroReferenceVisaTransformable" type="text" value="${wizard.numeroReferenceVisaTransformable}" required>
                             </div>
+                            <div class="form-group">
+                                <label for="dateDebutVisaTransformable">Date début visa transformable</label>
+                                <input id="dateDebutVisaTransformable" name="dateDebutVisaTransformable" type="date" value="${wizard.dateDebutVisaTransformable}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="dateExpirationVisaTransformable">Date expiration visa transformable</label>
+                                <input id="dateExpirationVisaTransformable" name="dateExpirationVisaTransformable" type="date" value="${wizard.dateExpirationVisaTransformable}" required>
+                            </div>
                         </div>
                         <div class="form-actions">
                             <a href="/demandes/nouveau?step=1" class="btn-table">← Étape 1</a>

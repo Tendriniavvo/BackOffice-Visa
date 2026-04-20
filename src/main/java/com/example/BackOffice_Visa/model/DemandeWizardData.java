@@ -18,6 +18,8 @@ public class DemandeWizardData {
     private LocalDate dateDelivrance;
     private LocalDate dateExpiration;
     private String paysDelivrance;
+    private LocalDate dateDebutVisaTransformable;
+    private LocalDate dateExpirationVisaTransformable;
     private String numeroReferenceVisaTransformable;
 
     private Integer idTypeVisa;
@@ -126,6 +128,22 @@ public class DemandeWizardData {
 
     public void setPaysDelivrance(String paysDelivrance) {
         this.paysDelivrance = paysDelivrance;
+    }
+
+    public LocalDate getDateDebutVisaTransformable() {
+        return dateDebutVisaTransformable;
+    }
+
+    public void setDateDebutVisaTransformable(LocalDate dateDebutVisaTransformable) {
+        this.dateDebutVisaTransformable = dateDebutVisaTransformable;
+    }
+
+    public LocalDate getDateExpirationVisaTransformable() {
+        return dateExpirationVisaTransformable;
+    }
+
+    public void setDateExpirationVisaTransformable(LocalDate dateExpirationVisaTransformable) {
+        this.dateExpirationVisaTransformable = dateExpirationVisaTransformable;
     }
 
     public String getNumeroReferenceVisaTransformable() {

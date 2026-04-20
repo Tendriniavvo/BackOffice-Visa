@@ -116,6 +116,8 @@ CREATE TABLE Visa_transformable (
     id SERIAL PRIMARY KEY,
     id_demandeur INT NOT NULL,
     id_passeport INT NOT NULL,
+    date_debut DATE NOT NULL,
+    date_expiration DATE NOT NULL,
     numero_reference VARCHAR(50) NOT NULL UNIQUE,
     CONSTRAINT fk_visa_trans_demandeur FOREIGN KEY (id_demandeur) REFERENCES Demandeur(id),
     CONSTRAINT fk_visa_trans_passeport FOREIGN KEY (id_passeport) REFERENCES Passeport(id)
