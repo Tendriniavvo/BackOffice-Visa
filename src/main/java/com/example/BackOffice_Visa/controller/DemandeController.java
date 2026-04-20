@@ -123,6 +123,32 @@ public class DemandeController {
             model.addAttribute("piecesSpecifiques", piecesSpecifiques);
         }
 
+        if (step == 4) {
+            if (wizard.getIdTypeVisa() == null || wizard.getIdTypeDemande() == null
+                    || wizard.getDateDemande() == null) {
+                return "redirect:/demandes/nouveau?step=3";
+            }
+
+            model.addAttribute("selectedSituation",
+                    situationFamilialeService.findById(wizard.getIdSituationFamiliale()).orElse(null));
+            model.addAttribute("selectedNationalite",
+                    nationaliteService.findById(wizard.getIdNationalite()).orElse(null));
+            model.addAttribute("selectedTypeVisa", typeVisaService.findById(wizard.getIdTypeVisa()).orElse(null));
+            model.addAttribute("selectedTypeDemande",
+                    typeDemandeService.findById(wizard.getIdTypeDemande()).orElse(null));
+
+            Set<Integer> selectedPieceIds = wizard.getPieceFournieIds() == null
+                    ? new HashSet<>()
+                    : new HashSet<>(wizard.getPieceFournieIds());
+
+            List<PieceJustificative> piecesSelectionnees = pieceJustificativeService.findAll()
+                    .stream()
+                    .filter(piece -> selectedPieceIds.contains(piece.getId()))
+                    .toList();
+
+            model.addAttribute("piecesSelectionnees", piecesSelectionnees);
+        }
+
         return "demande/nouveau";
     }
 
@@ -206,14 +232,32 @@ public class DemandeController {
         return "redirect:/demandes/nouveau?step=3";
     }
 
-    @Transactional
-    @PostMapping("/demandes/nouveau/finaliser")
-    public String finalizeDemande(
+    @PostMapping("/demandes/nouveau/etape3")
+    public String saveStep3(
             @ModelAttribute("demandeWizard") DemandeWizardData wizard,
             @RequestParam("idTypeVisa") Integer idTypeVisa,
             @RequestParam("idTypeDemande") Integer idTypeDemande,
             @RequestParam("dateDemande") LocalDate dateDemande,
             @RequestParam(name = "pieceFournieIds", required = false) List<Integer> pieceFournieIds,
+            RedirectAttributes redirectAttributes) {
+
+        if (idTypeVisa == null || idTypeDemande == null || dateDemande == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Veuillez compléter l'étape 3 avant de continuer.");
+            return "redirect:/demandes/nouveau?step=3";
+        }
+
+        wizard.setIdTypeVisa(idTypeVisa);
+        wizard.setIdTypeDemande(idTypeDemande);
+        wizard.setDateDemande(dateDemande);
+        wizard.setPieceFournieIds(pieceFournieIds == null ? new ArrayList<>() : pieceFournieIds);
+
+        return "redirect:/demandes/nouveau?step=4";
+    }
+
+    @Transactional
+    @PostMapping("/demandes/nouveau/finaliser")
+    public String finalizeDemande(
+            @ModelAttribute("demandeWizard") DemandeWizardData wizard,
             RedirectAttributes redirectAttributes,
             SessionStatus sessionStatus) {
 
@@ -243,14 +287,10 @@ public class DemandeController {
             return "redirect:/demandes/nouveau?step=2";
         }
 
-        if (idTypeVisa == null || idTypeDemande == null || dateDemande == null) {
+        if (wizard.getIdTypeVisa() == null || wizard.getIdTypeDemande() == null || wizard.getDateDemande() == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "Veuillez compléter l'étape 3 avant de finaliser.");
             return "redirect:/demandes/nouveau?step=3";
         }
-
-        wizard.setIdTypeVisa(idTypeVisa);
-        wizard.setIdTypeDemande(idTypeDemande);
-        wizard.setDateDemande(dateDemande);
 
         Demandeur demandeur = new Demandeur();
         demandeur.setNom(wizard.getNom());
@@ -303,7 +343,9 @@ public class DemandeController {
         List<PieceJustificative> piecesCommunes = pieceJustificativeService.findCommunes();
         List<PieceJustificative> piecesSpecifiques = pieceJustificativeService
                 .findSpecifiquesByTypeVisaId(wizard.getIdTypeVisa());
-        Set<Integer> pieceIdsCochees = pieceFournieIds == null ? new HashSet<>() : new HashSet<>(pieceFournieIds);
+        Set<Integer> pieceIdsCochees = wizard.getPieceFournieIds() == null
+                ? new HashSet<>()
+                : new HashSet<>(wizard.getPieceFournieIds());
 
         List<PieceJustificative> piecesEligibles = new ArrayList<>();
         piecesEligibles.addAll(piecesCommunes);

@@ -1,6 +1,7 @@
 package com.example.BackOffice_Visa.model;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class DemandeWizardData {
 
@@ -25,6 +26,7 @@ public class DemandeWizardData {
     private Integer idTypeVisa;
     private Integer idTypeDemande;
     private LocalDate dateDemande;
+    private List<Integer> pieceFournieIds;
 
     public String getNom() {
         return nom;
@@ -176,5 +178,13 @@ public class DemandeWizardData {
 
     public void setDateDemande(LocalDate dateDemande) {
         this.dateDemande = dateDemande;
+    }
+
+    public List<Integer> getPieceFournieIds() {
+        return pieceFournieIds;
+    }
+
+    public void setPieceFournieIds(List<Integer> pieceFournieIds) {
+        this.pieceFournieIds = pieceFournieIds;
     }
 }

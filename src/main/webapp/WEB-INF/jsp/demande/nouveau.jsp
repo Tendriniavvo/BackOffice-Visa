@@ -21,7 +21,7 @@
     <div class="content">
         <div class="page-header">
             <h2 class="content-title">Créer une nouvelle demande</h2>
-            <p class="content-text">Processus en 3 étapes : Demandeur → Passeport/Visa transformable → Type visa et pièces.</p>
+            <p class="content-text">Processus en 4 étapes : Demandeur → Passeport/Visa transformable → Type visa et pièces → Vérification.</p>
         </div>
 
         <div class="card form-card">
@@ -40,6 +40,7 @@
                     <div class="wizard-step ${step == 1 ? 'active' : ''}">1. Infos demandeur</div>
                     <div class="wizard-step ${step == 2 ? 'active' : ''}">2. Passeport & Visa transfo</div>
                     <div class="wizard-step ${step == 3 ? 'active' : ''}">3. Type visa & pièces</div>
+                    <div class="wizard-step ${step == 4 ? 'active' : ''}">4. Récapitulatif</div>
                 </div>
 
                 <c:if test="${step == 1}">
@@ -139,7 +140,7 @@
                 </c:if>
 
                 <c:if test="${step == 3}">
-                    <form action="/demandes/nouveau/finaliser" method="post" class="demand-form">
+                    <form action="/demandes/nouveau/etape3" method="post" class="demand-form">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="idTypeVisa">Type de visa</label>
@@ -172,7 +173,8 @@
                             <div class="pieces-grid">
                                 <c:forEach items="${piecesCommunes}" var="piece">
                                     <label class="piece-item">
-                                        <input type="checkbox" name="pieceFournieIds" value="${piece.id}">
+                                        <input type="checkbox" name="pieceFournieIds" value="${piece.id}"
+                                               ${wizard.pieceFournieIds != null && wizard.pieceFournieIds.contains(piece.id) ? 'checked' : ''}>
                                         <span>${piece.libelle} <small>${piece.obligatoire ? '(obligatoire)' : '(optionnelle)'}</small></span>
                                     </label>
                                 </c:forEach>
@@ -187,7 +189,8 @@
                                     <c:otherwise>
                                         <c:forEach items="${piecesSpecifiques}" var="piece">
                                             <label class="piece-item">
-                                                <input type="checkbox" name="pieceFournieIds" value="${piece.id}">
+                                                <input type="checkbox" name="pieceFournieIds" value="${piece.id}"
+                                                       ${wizard.pieceFournieIds != null && wizard.pieceFournieIds.contains(piece.id) ? 'checked' : ''}>
                                                 <span>${piece.libelle} <small>${piece.obligatoire ? '(obligatoire)' : '(optionnelle)'}</small></span>
                                             </label>
                                         </c:forEach>
@@ -198,9 +201,113 @@
 
                         <div class="form-actions">
                             <a href="/demandes/nouveau?step=2" class="btn-table">← Étape 2</a>
-                            <button type="submit" class="btn-primary">Enregistrer la demande</button>
+                            <button type="submit" class="btn-primary">Voir le récapitulatif</button>
                         </div>
                     </form>
+                </c:if>
+
+                <c:if test="${step == 4}">
+                    <div class="detail-sheet">
+                        <div class="detail-sheet-header">
+                            <div>
+                                <p class="detail-eyebrow">Fiche de vérification</p>
+                                <h3 class="detail-title">Dossier de ${wizard.nom} ${wizard.prenom}</h3>
+                                <p class="detail-subtitle">Vérifie les informations avant l’enregistrement définitif de la demande.</p>
+                            </div>
+                            <span class="detail-status">Prêt à enregistrer</span>
+                        </div>
+
+                        <div class="detail-grid-2">
+                            <section class="detail-card">
+                                <h4>Identité du demandeur</h4>
+                                <div class="detail-list">
+                                    <div class="detail-row"><span>Nom</span><strong>${wizard.nom}</strong></div>
+                                    <div class="detail-row"><span>Prénom</span><strong>${wizard.prenom}</strong></div>
+                                    <div class="detail-row"><span>Date de naissance</span><strong>${wizard.dateNaissance}</strong></div>
+                                    <div class="detail-row"><span>Lieu de naissance</span><strong>${wizard.lieuNaissance}</strong></div>
+                                    <div class="detail-row"><span>Situation familiale</span><strong>${selectedSituation != null ? selectedSituation.libelle : '-'}</strong></div>
+                                    <div class="detail-row"><span>Nationalité</span><strong>${selectedNationalite != null ? selectedNationalite.libelle : '-'}</strong></div>
+                                </div>
+                            </section>
+
+                            <section class="detail-card">
+                                <h4>Coordonnées</h4>
+                                <div class="detail-list">
+                                    <div class="detail-row"><span>Téléphone</span><strong>${wizard.telephone}</strong></div>
+                                    <div class="detail-row"><span>Email</span><strong>${wizard.email}</strong></div>
+                                    <div class="detail-row"><span>Adresse</span><strong>${wizard.adresse}</strong></div>
+                                </div>
+                            </section>
+                        </div>
+
+                        <div class="detail-grid-2">
+                            <section class="detail-card">
+                                <h4>Passeport</h4>
+                                <div class="detail-list">
+                                    <div class="detail-row"><span>Numéro</span><strong>${wizard.numeroPasseport}</strong></div>
+                                    <div class="detail-row"><span>Pays de délivrance</span><strong>${wizard.paysDelivrance}</strong></div>
+                                    <div class="detail-row"><span>Date délivrance</span><strong>${wizard.dateDelivrance}</strong></div>
+                                    <div class="detail-row"><span>Date expiration</span><strong>${wizard.dateExpiration}</strong></div>
+                                </div>
+                            </section>
+
+                            <section class="detail-card">
+                                <h4>Visa transformable</h4>
+                                <div class="detail-list">
+                                    <div class="detail-row"><span>Référence</span><strong>${wizard.numeroReferenceVisaTransformable}</strong></div>
+                                    <div class="detail-row"><span>Date début</span><strong>${wizard.dateDebutVisaTransformable}</strong></div>
+                                    <div class="detail-row"><span>Date expiration</span><strong>${wizard.dateExpirationVisaTransformable}</strong></div>
+                                </div>
+                            </section>
+                        </div>
+
+                        <section class="detail-card">
+                            <h4>Informations de la demande</h4>
+                            <div class="detail-grid-3">
+                                <div class="detail-kpi">
+                                    <span>Type de visa</span>
+                                    <strong>${selectedTypeVisa != null ? selectedTypeVisa.libelle : '-'}</strong>
+                                </div>
+                                <div class="detail-kpi">
+                                    <span>Type de demande</span>
+                                    <strong>${selectedTypeDemande != null ? selectedTypeDemande.libelle : '-'}</strong>
+                                </div>
+                                <div class="detail-kpi">
+                                    <span>Date de demande</span>
+                                    <strong>${wizard.dateDemande}</strong>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="detail-card">
+                            <div class="detail-card-head-inline">
+                                <h4>Pièces justificatives sélectionnées</h4>
+                                <span class="detail-counter">${empty piecesSelectionnees ? 0 : piecesSelectionnees.size()} pièce(s)</span>
+                            </div>
+                            <c:choose>
+                                <c:when test="${empty piecesSelectionnees}">
+                                    <p class="detail-empty">Aucune pièce n’a été cochée.</p>
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="detail-tags">
+                                        <c:forEach items="${piecesSelectionnees}" var="piece">
+                                            <span class="detail-tag ${piece.obligatoire ? 'required' : ''}">
+                                                ${piece.libelle}
+                                                <small>${piece.obligatoire ? 'Obligatoire' : 'Optionnelle'}</small>
+                                            </span>
+                                        </c:forEach>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+                        </section>
+
+                        <form action="/demandes/nouveau/finaliser" method="post">
+                            <div class="form-actions detail-actions">
+                                <a href="/demandes/nouveau?step=3" class="btn-table">← Retour étape 3</a>
+                                <button type="submit" class="btn-primary">Confirmer et enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
                 </c:if>
 
                 <form action="/demandes/nouveau/reinitialiser" method="post" style="margin-top:12px; text-align:right;">
