@@ -93,15 +93,15 @@ public class DemandeController {
         return wizard;
     }
 
-        @GetMapping("/demandes")
-        public String listDemandes(Model model) {
-                List<Demande> demandes = demandeService.findAll()
-                                .stream()
-                                .sorted(Comparator.comparing(Demande::getId, Comparator.nullsLast(Integer::compareTo)).reversed())
-                                .toList();
-                model.addAttribute("demandes", demandes);
-                return "demande/liste";
-        }
+    @GetMapping("/demandes")
+    public String listDemandes(Model model) {
+        List<Demande> demandes = demandeService.findAll()
+                .stream()
+                .sorted(Comparator.comparing(Demande::getId, Comparator.nullsLast(Integer::compareTo)).reversed())
+                .toList();
+        model.addAttribute("demandes", demandes);
+        return "demande/liste";
+    }
 
     @GetMapping("/demandes/nouveau")
     public String showCreateDemandeForm(
