@@ -1,5 +1,7 @@
 package com.example.BackOffice_Visa.entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,6 +26,12 @@ public class VisaTransformable {
     @ManyToOne(optional = false)
     @JoinColumn(name = "id_passeport", nullable = false)
     private Passeport passeport;
+
+    @Column(name = "date_debut", nullable = false)
+    private LocalDate dateDebut;
+
+    @Column(name = "date_expiration", nullable = false)
+    private LocalDate dateExpiration;
 
     @Column(name = "numero_reference", nullable = false, unique = true, length = 50)
     private String numeroReference;
@@ -58,5 +66,21 @@ public class VisaTransformable {
 
     public void setNumeroReference(String numeroReference) {
         this.numeroReference = numeroReference;
+    }
+
+    public LocalDate getDateDebut() {
+        return dateDebut;
+    }
+
+    public void setDateDebut(LocalDate dateDebut) {
+        this.dateDebut = dateDebut;
+    }
+
+    public LocalDate getDateExpiration() {
+        return dateExpiration;
+    }
+
+    public void setDateExpiration(LocalDate dateExpiration) {
+        this.dateExpiration = dateExpiration;
     }
 }

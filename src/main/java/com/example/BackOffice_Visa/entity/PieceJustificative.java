@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -20,6 +22,10 @@ public class PieceJustificative {
 
     @Column(nullable = false)
     private Boolean obligatoire = false;
+
+    @ManyToOne
+    @JoinColumn(name = "id_type_visa")
+    private TypeVisa typeVisa;
 
     public Integer getId() {
         return id;
@@ -43,5 +49,13 @@ public class PieceJustificative {
 
     public void setObligatoire(Boolean obligatoire) {
         this.obligatoire = obligatoire;
+    }
+
+    public TypeVisa getTypeVisa() {
+        return typeVisa;
+    }
+
+    public void setTypeVisa(TypeVisa typeVisa) {
+        this.typeVisa = typeVisa;
     }
 }
