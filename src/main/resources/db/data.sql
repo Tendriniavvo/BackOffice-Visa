@@ -21,45 +21,7 @@ INSERT INTO piece_justificative (id, libelle, obligatoire, id_type_visa) VALUES
 (4, 'Contrat de travail', TRUE, 2),
 (5, 'Photo d''identité', TRUE, NULL);
 
--- Demandeurs
-INSERT INTO Demandeur (
-    id,
-    nom,
-    prenom,
-    date_naissance,
-    lieu_naissance,
-    telephone,
-    email,
-    adresse,
-    id_situation_familiale,
-    id_nationalite
-) VALUES
-(1, 'Rakoto', 'Aina', '1995-04-12', 'Antananarivo', '+261340000001', 'aina.rakoto@example.com', 'Lot II M 45, Antananarivo 101', 1, 1),
-(2, 'Andriamihaja', 'Mickael', '1989-11-03', 'Mahajanga', '+261340000002', 'mickael.andriamihaja@example.com', 'Rue du Port, Mahajanga 401', 2, 1),
-(3, 'Rasoa', 'Lina', '1998-07-21', 'Toamasina', '+261340000003', 'lina.rasoa@example.com', 'Avenue de la Gare, Toamasina 501', 1, 2);
-
--- Passeports
-INSERT INTO Passeport (
-    id,
-    id_demandeur,
-    numero_passeport,
-    date_delivrance,
-    date_expiration,
-    pays_delivrance,
-    id_statut_actuel
-) VALUES
-(1, 1, 'MG-PPT-2026-0001', '2021-01-15', '2031-01-14', 'Madagascar', 1),
-(2, 2, 'MG-PPT-2026-0002', '2020-06-02', '2030-06-01', 'Madagascar', 1),
-(3, 3, 'MG-PPT-2026-0003', '2022-03-10', '2032-03-09', 'Madagascar', 1);
-
--- Visa transformables (nécessaires avant Demande)
-INSERT INTO Visa_transformable (id, id_demandeur, id_passeport, numero_reference) VALUES
-(1, 1, 1, 'VT-2026-0001'),
-(2, 2, 2, 'VT-2026-0002'),
-(3, 3, 3, 'VT-2026-0003');
-
--- Optionnel: exemples de demandes prêtes
--- INSERT INTO Demande (id, id_visa_transformable, date_demande, id_statut, id_demandeur, id_type_visa, id_type_demande)
--- VALUES
--- (1, 1, CURRENT_DATE, 1, 1, 1, 1),
--- (2, 2, CURRENT_DATE, 1, 2, 2, 2);
+-- Réaligner les séquences après insertion d'IDs fixes
+SELECT setval(pg_get_serial_sequence('situation_familiale', 'id'), COALESCE((SELECT MAX(id) FROM situation_familiale), 1), true);
+SELECT setval(pg_get_serial_sequence('nationalite', 'id'), COALESCE((SELECT MAX(id) FROM nationalite), 1), true);
+SELECT setval(pg_get_serial_sequence('piece_justificative', 'id'), COALESCE((SELECT MAX(id) FROM piece_justificative), 1), true);

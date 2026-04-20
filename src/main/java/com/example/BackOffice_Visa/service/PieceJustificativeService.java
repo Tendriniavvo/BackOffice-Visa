@@ -23,6 +23,18 @@ public class PieceJustificativeService {
         return pieceJustificativeRepository.findAll();
     }
 
+    public List<PieceJustificative> findCommunes() {
+        return pieceJustificativeRepository.findByTypeVisaIsNullOrderByIdAsc();
+    }
+
+    public List<PieceJustificative> findSpecifiquesByTypeVisaId(Integer typeVisaId) {
+        return pieceJustificativeRepository.findByTypeVisaIdOrderByIdAsc(typeVisaId);
+    }
+
+    public List<PieceJustificative> findByIds(List<Integer> ids) {
+        return pieceJustificativeRepository.findByIdIn(ids);
+    }
+
     public Optional<PieceJustificative> findById(Integer id) {
         return pieceJustificativeRepository.findById(id);
     }
