@@ -3,6 +3,7 @@ package com.example.BackOffice_Visa.controller;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -91,6 +92,16 @@ public class DemandeController {
         wizard.setDateDemande(LocalDate.now());
         return wizard;
     }
+
+        @GetMapping("/demandes")
+        public String listDemandes(Model model) {
+                List<Demande> demandes = demandeService.findAll()
+                                .stream()
+                                .sorted(Comparator.comparing(Demande::getId, Comparator.nullsLast(Integer::compareTo)).reversed())
+                                .toList();
+                model.addAttribute("demandes", demandes);
+                return "demande/liste";
+        }
 
     @GetMapping("/demandes/nouveau")
     public String showCreateDemandeForm(
@@ -292,6 +303,30 @@ public class DemandeController {
             return "redirect:/demandes/nouveau?step=3";
         }
 
+        List<PieceJustificative> piecesCommunes = pieceJustificativeService.findCommunes();
+        List<PieceJustificative> piecesSpecifiques = pieceJustificativeService
+                .findSpecifiquesByTypeVisaId(wizard.getIdTypeVisa());
+        Set<Integer> pieceIdsCochees = wizard.getPieceFournieIds() == null
+                ? new HashSet<>()
+                : new HashSet<>(wizard.getPieceFournieIds());
+
+        List<PieceJustificative> piecesEligibles = new ArrayList<>();
+        piecesEligibles.addAll(piecesCommunes);
+        piecesEligibles.addAll(piecesSpecifiques);
+
+        List<String> piecesObligatoiresManquantes = piecesEligibles.stream()
+                .filter(piece -> Boolean.TRUE.equals(piece.getObligatoire()))
+                .filter(piece -> !pieceIdsCochees.contains(piece.getId()))
+                .map(PieceJustificative::getLibelle)
+                .toList();
+
+        if (!piecesObligatoiresManquantes.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Impossible de créer la demande : veuillez cocher toutes les pièces obligatoires manquantes ("
+                            + String.join(", ", piecesObligatoiresManquantes) + ").");
+            return "redirect:/demandes/nouveau?step=3&typeVisaId=" + wizard.getIdTypeVisa();
+        }
+
         Demandeur demandeur = new Demandeur();
         demandeur.setNom(wizard.getNom());
         demandeur.setPrenom(wizard.getPrenom());
@@ -339,17 +374,6 @@ public class DemandeController {
         demande.setStatut(statutDemande);
         demande.setDateDemande(wizard.getDateDemande());
         Demande savedDemande = demandeService.save(demande);
-
-        List<PieceJustificative> piecesCommunes = pieceJustificativeService.findCommunes();
-        List<PieceJustificative> piecesSpecifiques = pieceJustificativeService
-                .findSpecifiquesByTypeVisaId(wizard.getIdTypeVisa());
-        Set<Integer> pieceIdsCochees = wizard.getPieceFournieIds() == null
-                ? new HashSet<>()
-                : new HashSet<>(wizard.getPieceFournieIds());
-
-        List<PieceJustificative> piecesEligibles = new ArrayList<>();
-        piecesEligibles.addAll(piecesCommunes);
-        piecesEligibles.addAll(piecesSpecifiques);
 
         for (PieceJustificative piece : piecesEligibles) {
             DemandePiece demandePiece = new DemandePiece();
