@@ -18,6 +18,7 @@
 
         <div class="nav-section-label" style="margin-top:var(--sp-2)">Gestion</div>
         <a class="nav-item" href="/demandes"><span class="icon"><i data-lucide="file-text"></i></span> Demandes</a>
+        <a class="nav-item" href="/demandes/nouveau"><span class="icon"><i data-lucide="plus-circle"></i></span> Nouvelle demande</a>
         <a class="nav-item" href="/pieces"><span class="icon"><i data-lucide="paperclip"></i></span> Pièces justificatives</a>
         <a class="nav-item" href="/visas"><span class="icon"><i data-lucide="credit-card"></i></span> Visas délivrés</a>
         <a class="nav-item" href="/cartes-resident"><span class="icon"><i data-lucide="id-card"></i></span> Cartes résident</a>

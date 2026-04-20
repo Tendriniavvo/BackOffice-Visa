@@ -31,10 +31,13 @@ INSERT INTO Type_demande (id, libelle) VALUES
 (2, 'Transfert VISA'),
 (3, 'Duplicata carte residant');
 
+
 CREATE TABLE piece_justificative (
     id SERIAL PRIMARY KEY,
     libelle VARCHAR(100) NOT NULL,
-    obligatoire BOOLEAN DEFAULT FALSE
+    obligatoire BOOLEAN DEFAULT FALSE,
+    id_type_visa INT, -- On enlève le "NOT NULL"
+    CONSTRAINT fk_pj_type_visa FOREIGN KEY (id_type_visa) REFERENCES type_visa(id)
 );
 
 -- ==========================================================

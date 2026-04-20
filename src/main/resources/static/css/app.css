@@ -359,6 +359,51 @@ svg.donut { width:140px; height:140px; }
 .fade-in { animation:fadeIn 0.5s var(--ease) both; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
 
+/* ══════════════ PAGE: NOUVELLE DEMANDE ══════════════ */
+.page-header { margin-bottom:var(--sp-5); }
+.content-title { font-size:22px; font-weight:700; color:var(--text-primary); letter-spacing:-0.3px; }
+.content-text { color:var(--text-secondary); margin-top:var(--sp-1); }
+
+.form-card { max-width:900px; }
+.demand-form { display:flex; flex-direction:column; gap:var(--sp-5); }
+.form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sp-4); }
+
+.form-group { display:flex; flex-direction:column; gap:var(--sp-2); }
+.form-group label { font-size:12px; font-weight:600; color:var(--text-secondary); }
+.form-group input,
+.form-group select {
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--border-default);
+  border-radius:var(--radius-sm);
+  background:var(--bg-surface);
+  color:var(--text-primary);
+  font-family:var(--font-sans);
+  font-size:13px;
+  transition:border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+}
+.form-group input:focus,
+.form-group select:focus {
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-subtle);
+}
+
+.form-actions { display:flex; justify-content:flex-end; gap:var(--sp-3); }
+
+.form-alert {
+  padding:10px 12px;
+  border-radius:var(--radius-sm);
+  font-size:13px;
+  margin-bottom:var(--sp-4);
+  border:1px solid transparent;
+}
+.form-alert.success {
+  color:var(--green);
+  background:var(--green-subtle);
+  border-color:rgba(34,197,94,0.25);
+}
+
 /* ══════════════ MENU TOGGLE (Mobile) ══════════════ */
 .menu-toggle {
   display:none; width:36px; height:36px; border-radius:var(--radius-sm);
@@ -380,5 +425,6 @@ svg.donut { width:140px; height:140px; }
   .main{margin-left:0} .stats-grid{grid-template-columns:repeat(2,1fr)}
   .grid-3{grid-template-columns:1fr} .content{padding:var(--sp-5) var(--sp-4)}
   .topbar{padding:0 var(--sp-4)} .menu-toggle{display:flex!important}
+  .form-grid{grid-template-columns:1fr}
 }
 @media (max-width:600px) { .stats-grid{grid-template-columns:1fr} .search-bar{width:160px} .topbar-title{font-size:14px} }
