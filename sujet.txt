@@ -41,3 +41,40 @@ Nationalite (libelle )
 Demandeur ( nom , prenom(Opt) , dtn , situation familiale FK, adresse mada, Nationalite FK)
 Demande (date)
 Passport ( )
+
+
+
+
+SPRINT 2
+
+Flux :
+
+			Ouvrir le formulaire duplicata
+
+			Saisir les infos spécifiques du duplicata
+
+			Enregistrer la demande duplicata en la reliant aux données existantes (sans recréer demandeur/passeport)
+
+	Cas 2 : Sans données antérieures en base
+	Conditions :
+
+	Le dossier n’existe pas encore (pas d’état civil/passeport en base)
+
+Flux en 2 demandes :
+
+			Demande 1 (transformation/transfert) :
+
+			Créer d’abord le demandeur avec état civil, passeport, etc. via le formulaire de transformation (Sprint 1)
+			Mettre le statut comme visa approuvé
+			Demande 2 (duplicata) :
+
+			Rediriger vers le formulaire duplicata
+			Enregistrer le duplicata en le liant au dossier créé à l’étape 1
+			Données à saisir dans le formulaire duplicata
+
+			Motif de perte
+
+
+			Nouvelle date de délivrance
+
+			Nouvelle date d’expiration

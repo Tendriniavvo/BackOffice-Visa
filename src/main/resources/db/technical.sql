@@ -108,3 +108,8 @@ CREATE TABLE Statut_demande (
     date_changement_statut DATE,
     FOREIGN KEY (id_demande) REFERENCES Demande(id)
 );
+
+-- Postgres migration helper for existing databases
+ALTER TABLE demande ADD COLUMN IF NOT EXISTS motif_perte VARCHAR(255);
+ALTER TABLE demande ADD COLUMN IF NOT EXISTS nouvelle_date_delivrance DATE;
+ALTER TABLE demande ADD COLUMN IF NOT EXISTS nouvelle_date_expiration DATE;

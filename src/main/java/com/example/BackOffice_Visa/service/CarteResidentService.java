@@ -27,6 +27,10 @@ public class CarteResidentService {
         return carteResidentRepository.findById(id);
     }
 
+    public boolean existsByPasseportId(Integer passeportId) {
+        return carteResidentRepository.existsByPasseportId(passeportId);
+    }
+
     @Transactional
     public CarteResident save(CarteResident carteResident) {
         return carteResidentRepository.save(carteResident);

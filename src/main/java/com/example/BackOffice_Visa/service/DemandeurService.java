@@ -19,6 +19,10 @@ public class DemandeurService {
         this.demandeurRepository = demandeurRepository;
     }
 
+    public List<Demandeur> findForVerification(String nom, String prenom, String numeroPasseport) {
+        return demandeurRepository.findForVerification(nom, prenom, numeroPasseport);
+    }
+
     public List<Demandeur> findAll() {
         return demandeurRepository.findAll();
     }

@@ -15,6 +15,7 @@
 
         <div class="nav-section-label" style="margin-top:var(--sp-2)">Gestion</div>
         <a class="nav-item" href="/demandes/nouveau"><span class="icon"><i data-lucide="plus-circle"></i></span> Nouvelle demande</a>
+        <a class="nav-item" href="/demandes/verification"><span class="icon"><i data-lucide="search"></i></span> Vérification (Tr/Dup)</a>
         <a class="nav-item" href="/demandes"><span class="icon"><i data-lucide="files"></i></span> Liste des demandes</a>
     </nav>
 
