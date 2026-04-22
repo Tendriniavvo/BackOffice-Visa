@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liste des Demandes — VisaTrack</title>
+    <title>Upload pièces justificatives — VisaTrack</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="/css/app.css">
@@ -20,8 +20,8 @@
 
     <div class="content">
         <div class="page-header">
-            <h2 class="content-title">Liste des demandes</h2>
-            <p class="content-text">Suivi des dossiers créés dans le système.</p>
+            <h2 class="content-title">Upload des pièces justificatives</h2>
+            <p class="content-text">Demande <span class="dossier-id">#${demande.id}</span> — ${demande.demandeur != null ? demande.demandeur.nom : '-'} ${demande.demandeur != null ? demande.demandeur.prenom : ''}</p>
         </div>
 
         <% if (request.getAttribute("successMessage") != null) { %>
@@ -31,55 +31,54 @@
         <div class="form-alert" style="color:var(--red);background:var(--red-subtle);border-color:rgba(239,68,68,0.25);"><%= request.getAttribute("errorMessage") %></div>
         <% } %>
 
-        <div class="card">
+        <div class="card form-card">
             <div class="card-header">
-                <span class="card-title">Demandes (${demandes.size()})</span>
-                <a href="/demandes/nouveau" class="btn-primary">Nouvelle demande</a>
+                <span class="card-title">Pièces cochées à uploader</span>
+                <a href="/demandes" class="btn-table">Retour liste</a>
             </div>
             <div class="card-body">
                 <c:choose>
-                    <c:when test="${empty demandes}">
-                        <p class="content-text">Aucune demande enregistrée pour le moment.</p>
+                    <c:when test="${empty piecesCochees}">
+                        <p class="content-text">Aucune pièce cochée pour cette demande.</p>
                     </c:when>
                     <c:otherwise>
-                        <div class="table-wrap">
-                            <table>
-                                <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Demandeur</th>
-                                    <th>Type visa</th>
-                                    <th>Type demande</th>
-                                    <th>Date demande</th>
-                                    <th>Statut</th>
-                                    <th>Action</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <c:forEach items="${demandes}" var="demande">
+                        <form method="post" action="/demandes/${demande.id}/pieces/upload" enctype="multipart/form-data" class="demand-form">
+                            <div class="table-wrap">
+                                <table>
+                                    <thead>
                                     <tr>
-                                        <td><span class="dossier-id">#${demande.id}</span></td>
-                                        <td>
-                                            ${demande.demandeur != null ? demande.demandeur.nom : '-'}
-                                            ${demande.demandeur != null ? demande.demandeur.prenom : ''}
-                                        </td>
-                                        <td>${demande.typeVisa != null ? demande.typeVisa.libelle : '-'}</td>
-                                        <td>${demande.typeDemande != null ? demande.typeDemande.libelle : '-'}</td>
-                                        <td>${demande.dateDemande}</td>
-                                        <td>
-                                            <span class="badge review">
-                                                <span class="badge-dot"></span>
-                                                ${demande.statut != null ? demande.statut.libelle : 'N/A'}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <a href="/demandes/${demande.id}/pieces/upload" class="btn-table btn-upload-dossier">Soumettre dossier</a>
-                                        </td>
+                                        <th>Pièce</th>
+                                        <th>Obligatoire</th>
+                                        <th>Fichier existant</th>
+                                        <th>Nouveau fichier</th>
                                     </tr>
-                                </c:forEach>
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                    <c:forEach items="${piecesCochees}" var="demandePiece">
+                                        <tr>
+                                            <td>${demandePiece.piece.libelle}</td>
+                                            <td>
+                                                <span class="badge ${demandePiece.piece.obligatoire ? 'review' : 'creee'}">
+                                                    <span class="badge-dot"></span>
+                                                    ${demandePiece.piece.obligatoire ? 'Oui' : 'Non'}
+                                                </span>
+                                            </td>
+                                            <td>${demandePiece.fichier != null ? demandePiece.fichier : '-'}</td>
+                                            <td>
+                                                <input type="hidden" name="demandePieceIds" value="${demandePiece.id}">
+                                                <input type="file" name="fichiers" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="form-actions">
+                                <a href="/demandes" class="btn-table">Annuler</a>
+                                <button type="submit" class="btn-primary">Soumettre dossier (upload)</button>
+                            </div>
+                        </form>
                     </c:otherwise>
                 </c:choose>
             </div>

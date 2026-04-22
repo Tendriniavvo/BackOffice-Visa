@@ -2,22 +2,29 @@ package com.example.BackOffice_Visa.controller;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.bind.support.SessionStatus;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.util.StringUtils;
 
@@ -55,6 +62,7 @@ public class DemandeController {
         private static final Integer TYPE_DEMANDE_DUPLICATA_CARTE = 3;
         private static final Integer STATUT_DEMANDE_CREEE = 1;
         private static final Integer STATUT_DEMANDE_VALIDEE = 31;
+        private static final Path UPLOAD_ROOT = Paths.get("uploads", "demande-pj");
 
         private final SituationFamilialeService situationFamilialeService;
         private final NationaliteService nationaliteService;
@@ -118,6 +126,90 @@ public class DemandeController {
                                 .toList();
                 model.addAttribute("demandes", demandes);
                 return "demande/liste";
+        }
+
+        @GetMapping("/demandes/{demandeId}/pieces/upload")
+        public String showUploadPiecesForm(
+                        @PathVariable Integer demandeId,
+                        Model model,
+                        RedirectAttributes redirectAttributes) {
+
+                Demande demande = demandeService.findById(demandeId)
+                                .orElse(null);
+
+                if (demande == null) {
+                        redirectAttributes.addFlashAttribute("errorMessage",
+                                        "Demande introuvable.");
+                        return "redirect:/demandes";
+                }
+
+                List<DemandePiece> piecesCochees = demandePieceService.findPiecesCocheesByDemandeId(demandeId);
+                model.addAttribute("demande", demande);
+                model.addAttribute("piecesCochees", piecesCochees);
+                return "demande/upload-pj";
+        }
+
+        @Transactional
+        @PostMapping("/demandes/{demandeId}/pieces/upload")
+        public String uploadPiecesDemande(
+                        @PathVariable Integer demandeId,
+                        @RequestParam(name = "demandePieceIds", required = false) List<Integer> demandePieceIds,
+                        @RequestParam(name = "fichiers", required = false) List<MultipartFile> fichiers,
+                        RedirectAttributes redirectAttributes) {
+
+                if (demandeService.findById(demandeId).isEmpty()) {
+                        redirectAttributes.addFlashAttribute("errorMessage", "Demande introuvable.");
+                        return "redirect:/demandes";
+                }
+
+                if (demandePieceIds == null || fichiers == null || demandePieceIds.size() != fichiers.size()) {
+                        redirectAttributes.addFlashAttribute("errorMessage",
+                                        "Formulaire invalide: impossible de traiter les pièces jointes.");
+                        return "redirect:/demandes/" + demandeId + "/pieces/upload";
+                }
+
+                int uploadCount = 0;
+
+                for (int i = 0; i < demandePieceIds.size(); i++) {
+                        Integer demandePieceId = demandePieceIds.get(i);
+                        MultipartFile fichier = fichiers.get(i);
+
+                        if (fichier == null || fichier.isEmpty()) {
+                                continue;
+                        }
+
+                        DemandePiece demandePiece = demandePieceService.findById(demandePieceId)
+                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                        "Pièce de demande introuvable"));
+
+                        if (demandePiece.getDemande() == null
+                                        || !demandeId.equals(demandePiece.getDemande().getId())) {
+                                throw new IllegalArgumentException("Pièce non liée à la demande sélectionnée");
+                        }
+
+                        if (!Boolean.TRUE.equals(demandePiece.getEstFourni())) {
+                                continue;
+                        }
+
+                        String originalFilename = StringUtils.cleanPath(fichier.getOriginalFilename());
+                        String nomFichier = UUID.randomUUID() + "_" + originalFilename;
+                        String cheminRelatif = storeUploadedFile(demandeId, nomFichier, fichier);
+
+                        demandePiece.setFichier(cheminRelatif);
+                        demandePiece.setDateUpload(LocalDateTime.now());
+                        demandePieceService.save(demandePiece);
+                        uploadCount++;
+                }
+
+                if (uploadCount == 0) {
+                        redirectAttributes.addFlashAttribute("errorMessage",
+                                        "Aucun fichier n'a été envoyé. Ajoutez au moins un document.");
+                        return "redirect:/demandes/" + demandeId + "/pieces/upload";
+                }
+
+                redirectAttributes.addFlashAttribute("successMessage",
+                                uploadCount + " pièce(s) uploadée(s) pour la demande #" + demandeId + ".");
+                return "redirect:/demandes";
         }
 
         @GetMapping("/demandes/nouveau")
@@ -561,5 +653,17 @@ public class DemandeController {
         public String resetWizard(SessionStatus sessionStatus) {
                 sessionStatus.setComplete();
                 return "redirect:/demandes/nouveau?step=1";
+        }
+
+        private String storeUploadedFile(Integer demandeId, String nomFichier, MultipartFile fichier) {
+                try {
+                        Path dossierDemande = UPLOAD_ROOT.resolve("demande-" + demandeId);
+                        Files.createDirectories(dossierDemande);
+                        Path destination = dossierDemande.resolve(nomFichier);
+                        Files.copy(fichier.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
+                        return "demande-" + demandeId + "/" + nomFichier;
+                } catch (Exception e) {
+                        throw new IllegalStateException("Impossible de sauvegarder le fichier uploadé", e);
+                }
         }
 }

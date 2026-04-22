@@ -27,6 +27,14 @@ public class DemandePieceService {
         return demandePieceRepository.findById(id);
     }
 
+    public List<DemandePiece> findPiecesCocheesByDemandeId(Integer demandeId) {
+        return demandePieceRepository.findByDemandeIdAndEstFourniTrueOrderByIdAsc(demandeId);
+    }
+
+    public Optional<DemandePiece> findByDemandeIdAndPieceId(Integer demandeId, Integer pieceId) {
+        return demandePieceRepository.findByDemandeIdAndPieceId(demandeId, pieceId);
+    }
+
     @Transactional
     public DemandePiece save(DemandePiece demandePiece) {
         return demandePieceRepository.save(demandePiece);
