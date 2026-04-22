@@ -1,0 +1,57 @@
+je veux cette fonctionnalite 
+Dans mon système, il existe les tables suivantes :
+- Demandeur
+- Passeport
+- Visa_transformable
+- Demande
+- Carte_resident
+- Ref_Statut_Demande
+
+Je veux implémenter la logique du Sprint 2 appelée :
+"SANS DONNÉES ANTÉRIEURES AVEC RECONSTITUTION + VALIDATION AUTOMATIQUE"
+
+Règles métier :
+
+1. L'utilisateur peut faire une demande de type :
+   - Transfert VISA (id_type_demande = 2)
+   - Duplicata carte résident (id_type_demande = 3)
+
+2. Avant de créer la demande, le système doit rechercher :
+   - un visa_transformable (pour transfert)
+   - une carte_resident (pour duplicata)
+
+3. Si les données EXISTENT :
+   → continuer le processus normal (workflow classique)
+
+4. Si les données N'EXISTENT PAS :
+   → appliquer le mode "reconstitution"
+
+5. Mode reconstitution :
+   - créer les données manquantes :
+     ✔ Demandeur (si inexistant)
+     ✔ Passeport (si inexistant)
+     ✔ Visa_transformable ou Carte_resident
+
+   - ces données sont considérées comme :
+     ✔ déjà validées / approuvées
+
+6. Après reconstitution :
+   → créer la Demande
+
+7. IMPORTANT :
+   - la Demande doit être automatiquement VALIDÉE
+   - statut = 31 (Validée)
+   - date_traitement = CURRENT_DATE
+
+8. Ensuite :
+   → lier la demande aux données recréées
+   → créer directement le résultat final :
+        ✔ Visa (si transfert)
+        ✔ Carte_resident (si duplicata)
+
+9. Important :
+   - NE PAS transformer en "nouveau titre"
+   - garder le type de demande (2 ou 3)
+   - NE PAS passer par les étapes intermédiaires (en attente, en cours)
+
+   NB : n'utiliser pas le terme Sprint2 dans le projet 

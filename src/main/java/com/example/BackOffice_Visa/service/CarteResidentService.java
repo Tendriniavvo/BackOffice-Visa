@@ -27,6 +27,10 @@ public class CarteResidentService {
         return carteResidentRepository.findById(id);
     }
 
+    public Optional<CarteResident> findLatestByNumeroPasseport(String numeroPasseport) {
+        return carteResidentRepository.findFirstByPasseportNumeroPasseportOrderByIdDesc(numeroPasseport);
+    }
+
     @Transactional
     public CarteResident save(CarteResident carteResident) {
         return carteResidentRepository.save(carteResident);
