@@ -445,6 +445,62 @@ svg.donut { width:140px; height:140px; }
   box-shadow:0 0 0 3px var(--accent-subtle);
 }
 
+.input-file-modern {
+  width:100%;
+  min-width:240px;
+  padding:6px;
+  border:1px dashed var(--border-default);
+  border-radius:var(--radius-sm);
+  background:var(--bg-subtle);
+  color:var(--text-secondary);
+  font-family:var(--font-sans);
+  font-size:12.5px;
+  transition:border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease), background var(--duration) var(--ease);
+}
+
+.input-file-modern:hover {
+  border-color:var(--accent);
+  background:var(--accent-subtle);
+}
+
+.input-file-modern:focus-visible {
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-subtle);
+}
+
+.input-file-modern::file-selector-button {
+  border:1px solid var(--border-default);
+  background:var(--bg-surface);
+  color:var(--text-primary);
+  border-radius:var(--radius-sm);
+  padding:7px 10px;
+  margin-right:10px;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all var(--duration) var(--ease);
+}
+
+.input-file-modern:hover::file-selector-button {
+  border-color:var(--accent);
+  background:var(--accent-subtle);
+  color:var(--accent);
+}
+
+.input-file-modern::-webkit-file-upload-button {
+  border:1px solid var(--border-default);
+  background:var(--bg-surface);
+  color:var(--text-primary);
+  border-radius:var(--radius-sm);
+  padding:7px 10px;
+  margin-right:10px;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all var(--duration) var(--ease);
+}
+
 .form-actions { display:flex; justify-content:flex-end; gap:var(--sp-3); }
 
 .form-alert {

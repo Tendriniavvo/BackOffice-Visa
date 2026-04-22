@@ -66,7 +66,7 @@
                                             <td>${demandePiece.fichier != null ? demandePiece.fichier : '-'}</td>
                                             <td>
                                                 <input type="hidden" name="demandePieceIds" value="${demandePiece.id}">
-                                                <input type="file" name="fichiers" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                                <input type="file" name="fichiers" class="input-file-modern" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
                                             </td>
                                         </tr>
                                     </c:forEach>
