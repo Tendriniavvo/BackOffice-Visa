@@ -27,6 +27,14 @@ public class DemandeService {
         return demandeRepository.findById(id);
     }
 
+    public boolean existsByDemandeurIdAndStatutCode(Integer demandeurId, Integer statutCode) {
+        return demandeRepository.existsByDemandeurIdAndStatutCode(demandeurId, statutCode);
+    }
+
+    public Optional<Demande> findTopByDemandeurIdAndStatutCode(Integer demandeurId, Integer statutCode) {
+        return demandeRepository.findTopByDemandeurIdAndStatutCodeOrderByDateDemandeDescIdDesc(demandeurId, statutCode);
+    }
+
     @Transactional
     public Demande save(Demande demande) {
         return demandeRepository.save(demande);

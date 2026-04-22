@@ -45,6 +45,15 @@ public class Demande {
     @Column(name = "date_traitement")
     private LocalDate dateTraitement;
 
+    @Column(name = "motif_perte", length = 255)
+    private String motifPerte;
+
+    @Column(name = "nouvelle_date_delivrance")
+    private LocalDate nouvelleDateDelivrance;
+
+    @Column(name = "nouvelle_date_expiration")
+    private LocalDate nouvelleDateExpiration;
+
     public Integer getId() {
         return id;
     }
@@ -107,5 +116,29 @@ public class Demande {
 
     public void setDateTraitement(LocalDate dateTraitement) {
         this.dateTraitement = dateTraitement;
+    }
+
+    public String getMotifPerte() {
+        return motifPerte;
+    }
+
+    public void setMotifPerte(String motifPerte) {
+        this.motifPerte = motifPerte;
+    }
+
+    public LocalDate getNouvelleDateDelivrance() {
+        return nouvelleDateDelivrance;
+    }
+
+    public void setNouvelleDateDelivrance(LocalDate nouvelleDateDelivrance) {
+        this.nouvelleDateDelivrance = nouvelleDateDelivrance;
+    }
+
+    public LocalDate getNouvelleDateExpiration() {
+        return nouvelleDateExpiration;
+    }
+
+    public void setNouvelleDateExpiration(LocalDate nouvelleDateExpiration) {
+        this.nouvelleDateExpiration = nouvelleDateExpiration;
     }
 }

@@ -27,6 +27,14 @@ public class VisaTransformableService {
         return visaTransformableRepository.findById(id);
     }
 
+    public Optional<VisaTransformable> findByNumeroReference(String numeroReference) {
+        return visaTransformableRepository.findByNumeroReference(numeroReference);
+    }
+
+    public List<VisaTransformable> findByPasseportIdOrderByDateExpirationDesc(Integer passeportId) {
+        return visaTransformableRepository.findByPasseportIdOrderByDateExpirationDesc(passeportId);
+    }
+
     @Transactional
     public VisaTransformable save(VisaTransformable visaTransformable) {
         return visaTransformableRepository.save(visaTransformable);

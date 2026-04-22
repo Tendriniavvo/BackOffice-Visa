@@ -27,6 +27,14 @@ public class PasseportService {
         return passeportRepository.findById(id);
     }
 
+    public Optional<Passeport> findByNumeroPasseport(String numeroPasseport) {
+        return passeportRepository.findByNumeroPasseport(numeroPasseport);
+    }
+
+    public List<Passeport> findByDemandeurIdOrderByDateExpirationDesc(Integer demandeurId) {
+        return passeportRepository.findByDemandeurIdOrderByDateExpirationDesc(demandeurId);
+    }
+
     @Transactional
     public Passeport save(Passeport passeport) {
         return passeportRepository.save(passeport);

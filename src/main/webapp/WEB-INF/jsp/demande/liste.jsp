@@ -27,7 +27,10 @@
         <div class="card">
             <div class="card-header">
                 <span class="card-title">Demandes (${demandes.size()})</span>
-                <a href="/demandes/nouveau" class="btn-primary">Nouvelle demande</a>
+                <div style="display:flex;gap:10px;">
+                    <a href="/demandes/verification" class="btn-table">Vérification (Tr/Dup)</a>
+                    <a href="/demandes/nouveau" class="btn-primary">Nouvelle demande</a>
+                </div>
             </div>
             <div class="card-body">
                 <c:choose>

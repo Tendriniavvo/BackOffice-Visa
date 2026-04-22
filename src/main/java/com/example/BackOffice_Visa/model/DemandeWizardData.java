@@ -26,6 +26,9 @@ public class DemandeWizardData {
     private Integer idTypeVisa;
     private Integer idTypeDemande;
     private LocalDate dateDemande;
+    private String motifPerte;
+    private LocalDate nouvelleDateDelivrance;
+    private LocalDate nouvelleDateExpiration;
     private List<Integer> pieceFournieIds;
 
     public String getNom() {
@@ -186,5 +189,29 @@ public class DemandeWizardData {
 
     public void setPieceFournieIds(List<Integer> pieceFournieIds) {
         this.pieceFournieIds = pieceFournieIds;
+    }
+
+    public String getMotifPerte() {
+        return motifPerte;
+    }
+
+    public void setMotifPerte(String motifPerte) {
+        this.motifPerte = motifPerte;
+    }
+
+    public LocalDate getNouvelleDateDelivrance() {
+        return nouvelleDateDelivrance;
+    }
+
+    public void setNouvelleDateDelivrance(LocalDate nouvelleDateDelivrance) {
+        this.nouvelleDateDelivrance = nouvelleDateDelivrance;
+    }
+
+    public LocalDate getNouvelleDateExpiration() {
+        return nouvelleDateExpiration;
+    }
+
+    public void setNouvelleDateExpiration(LocalDate nouvelleDateExpiration) {
+        this.nouvelleDateExpiration = nouvelleDateExpiration;
     }
 }

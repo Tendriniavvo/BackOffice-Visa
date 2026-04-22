@@ -168,6 +168,21 @@
                             </div>
                         </div>
 
+                        <div id="duplicataFields" class="form-grid" style="display:none; margin-top: 14px;">
+                            <div class="form-group form-group-full">
+                                <label for="motifPerte">Motif de perte (Duplicata)</label>
+                                <input id="motifPerte" name="motifPerte" type="text" value="${wizard.motifPerte}">
+                            </div>
+                            <div class="form-group">
+                                <label for="nouvelleDateDelivrance">Nouvelle date de délivrance</label>
+                                <input id="nouvelleDateDelivrance" name="nouvelleDateDelivrance" type="date" value="${wizard.nouvelleDateDelivrance}">
+                            </div>
+                            <div class="form-group">
+                                <label for="nouvelleDateExpiration">Nouvelle date d'expiration</label>
+                                <input id="nouvelleDateExpiration" name="nouvelleDateExpiration" type="date" value="${wizard.nouvelleDateExpiration}">
+                            </div>
+                        </div>
+
                         <div class="pieces-section">
                             <h3 class="pieces-title">Pièces communes</h3>
                             <div class="pieces-grid">
@@ -277,6 +292,13 @@
                                     <strong>${wizard.dateDemande}</strong>
                                 </div>
                             </div>
+                            <c:if test="${wizard.motifPerte != null || wizard.nouvelleDateDelivrance != null || wizard.nouvelleDateExpiration != null}">
+                                <div class="detail-list" style="margin-top: 12px;">
+                                    <div class="detail-row"><span>Motif de perte</span><strong>${wizard.motifPerte != null ? wizard.motifPerte : '-'}</strong></div>
+                                    <div class="detail-row"><span>Nouvelle date de délivrance</span><strong>${wizard.nouvelleDateDelivrance != null ? wizard.nouvelleDateDelivrance : '-'}</strong></div>
+                                    <div class="detail-row"><span>Nouvelle date d'expiration</span><strong>${wizard.nouvelleDateExpiration != null ? wizard.nouvelleDateExpiration : '-'}</strong></div>
+                                </div>
+                            </c:if>
                         </section>
 
                         <section class="detail-card">
@@ -317,6 +339,37 @@
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        const typeDemandeSelect = document.getElementById('idTypeDemande');
+        const duplicataFields = document.getElementById('duplicataFields');
+        const motifPerte = document.getElementById('motifPerte');
+        const nouvelleDateDelivrance = document.getElementById('nouvelleDateDelivrance');
+        const nouvelleDateExpiration = document.getElementById('nouvelleDateExpiration');
+
+        if (!typeDemandeSelect || !duplicataFields) {
+            return;
+        }
+
+        function isDuplicataSelected() {
+            const option = typeDemandeSelect.options[typeDemandeSelect.selectedIndex];
+            const label = option ? option.text.toLowerCase() : '';
+            return label.includes('duplicata');
+        }
+
+        function toggleDuplicataFields() {
+            const active = isDuplicataSelected();
+            duplicataFields.style.display = active ? 'grid' : 'none';
+            motifPerte.required = active;
+            nouvelleDateDelivrance.required = active;
+            nouvelleDateExpiration.required = active;
+        }
+
+        typeDemandeSelect.addEventListener('change', toggleDuplicataFields);
+        toggleDuplicataFields();
+    })();
+</script>
 
 <script>
     lucide.createIcons();
