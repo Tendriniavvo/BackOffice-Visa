@@ -41,3 +41,10 @@ Nationalite (libelle )
 Demandeur ( nom , prenom(Opt) , dtn , situation familiale FK, adresse mada, Nationalite FK)
 Demande (date)
 Passport ( )
+
+
+reefa mi creer demande de mi genrer QRCode de iny QRcode iny url manokatra navigateur de mapipotra anle suivi anle 
+demande (historique)
+
+SPRINT 4 : app hafa (react) mampiditra num passport -> lister ny dmd lié amin'iny (sans donné anterieur avec statut)
+
