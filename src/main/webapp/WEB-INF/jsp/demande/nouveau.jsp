@@ -52,7 +52,7 @@
                         </div>
                     </section>
 
-                    <section class="detail-card">
+                    <section class="detail-card" id="demandeurSection">
                         <h4>Demandeur</h4>
                         <div class="form-grid">
                             <div class="form-group form-group-full">
@@ -131,6 +131,9 @@
                                             <button type="button" class="btn-primary" onclick="searchAncienPasseport()" style="width: auto; white-space: nowrap;">Rechercher</button>
                                         </div>
                                         <span id="searchAncienPasseportStatus" style="font-size: 0.85rem; margin-top: 4px; display: block;"></span>
+                                        <span id="ancienPasseportManualHint" style="font-size: 0.85rem; margin-top: 4px; display: none; color: var(--text-secondary);">
+                                            Passeport non trouvé — saisir manuellement
+                                        </span>
                                     </div>
                                     <div class="form-group">
                                         <label for="dateDelivranceAncienPasseport">Date de délivrance *</label>
@@ -358,10 +361,13 @@
     async function searchAncienPasseport() {
         const numero = document.getElementById('numeroAncienPasseport').value;
         const status = document.getElementById('searchAncienPasseportStatus');
+        const manualHint = document.getElementById('ancienPasseportManualHint');
+        const demandeurSection = document.getElementById('demandeurSection');
         if (!numero) return;
 
         status.textContent = "Recherche en cours...";
         status.style.color = "var(--text-secondary)";
+        if (manualHint) manualHint.style.display = 'none';
 
         try {
             const response = await fetch("/api/search/passeport?numero=" + encodeURIComponent(numero));
@@ -370,6 +376,7 @@
             if (response.ok && data.found) {
                 status.textContent = "Trouvé — informations chargées automatiquement";
                 status.style.color = "var(--green)";
+                if (manualHint) manualHint.style.display = 'none';
                 
                 // Charger les infos du passeport
                 const passportFields = ['dateDelivranceAncienPasseport', 'dateExpirationAncienPasseport', 'paysDelivranceAncienPasseport'];
@@ -385,6 +392,7 @@
 
                 // Charger les infos du demandeur si présentes
                 if (data.demandeur) {
+                    if (demandeurSection) demandeurSection.style.display = 'block';
                     const note = document.getElementById('demandeurNote');
                     if (note) note.style.display = 'block';
 
@@ -407,14 +415,38 @@
                             }
                         }
                     });
+                    const demandeurRequiredFields = ['nom', 'prenom', 'dateNaissance', 'lieuNaissance', 'telephone', 'email', 'adresse', 'idSituationFamiliale', 'idNationalite'];
+                    demandeurRequiredFields.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.required = true;
+                    });
+                } else {
+                    if (demandeurSection) demandeurSection.style.display = 'block';
+                    const note = document.getElementById('demandeurNote');
+                    if (note) note.style.display = 'none';
+                    const demandeurFields = ['nom', 'prenom', 'dateNaissance', 'lieuNaissance', 'telephone', 'email', 'adresse', 'idSituationFamiliale', 'idNationalite'];
+                    demandeurFields.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.classList.remove('field-found');
+                            el.readOnly = false;
+                            if (el.tagName === 'SELECT') {
+                                el.style.pointerEvents = 'auto';
+                                el.style.backgroundColor = '';
+                            }
+                            el.required = true;
+                        }
+                    });
                 }
             } else if (!response.ok) {
                 status.textContent = data.message || "Erreur lors de la recherche";
                 status.style.color = "var(--red)";
+                if (manualHint) manualHint.style.display = 'none';
                 alert(data.message);
             } else {
                 status.textContent = "Non trouvé — remplir les informations";
                 status.style.color = "var(--red)";
+                if (manualHint) manualHint.style.display = 'block';
                 const passportFields = ['dateDelivranceAncienPasseport', 'dateExpirationAncienPasseport', 'paysDelivranceAncienPasseport'];
                 passportFields.forEach(id => {
                     const el = document.getElementById(id);
@@ -423,10 +455,33 @@
                         el.readOnly = false;
                     }
                 });
+
+                const note = document.getElementById('demandeurNote');
+                if (note) note.style.display = 'none';
+                if (demandeurSection) demandeurSection.style.display = 'block';
+                const demandeurStatus = document.getElementById('searchDemandeurStatus');
+                if (demandeurStatus) {
+                    demandeurStatus.textContent = "Non trouvé — remplir les infos";
+                    demandeurStatus.style.color = "var(--red)";
+                }
+                const demandeurFields = ['nom', 'prenom', 'dateNaissance', 'lieuNaissance', 'telephone', 'email', 'adresse', 'idSituationFamiliale', 'idNationalite'];
+                demandeurFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.remove('field-found');
+                        el.readOnly = false;
+                        if (el.tagName === 'SELECT') {
+                            el.style.pointerEvents = 'auto';
+                            el.style.backgroundColor = '';
+                        }
+                        el.required = true;
+                    }
+                });
             }
         } catch (error) {
             status.textContent = "Erreur lors de la recherche";
             status.style.color = "var(--red)";
+            if (manualHint) manualHint.style.display = 'none';
         }
     }
 
@@ -501,11 +556,14 @@
                 status.textContent = "Trouvé — visa valide jusqu'au " + data.dateExpiration;
                 status.style.color = "var(--green)";
                 
-                const fields = ['dateDebutVisaTransformable', 'dateExpirationVisaTransformable'];
-                fields.forEach(id => {
-                    const el = document.getElementById(id);
+                const map = {
+                    dateDebutVisaTransformable: 'dateDebut',
+                    dateExpirationVisaTransformable: 'dateExpiration'
+                };
+                Object.entries(map).forEach(([fieldId, dataKey]) => {
+                    const el = document.getElementById(fieldId);
                     if (el) {
-                        el.value = data[id];
+                        el.value = data[dataKey] || '';
                         el.classList.add('field-found');
                         el.readOnly = true;
                     }
@@ -575,6 +633,7 @@
         const labelNouveau = document.getElementById('labelNumeroPasseport');
         const nouveauPasseportTitle = document.getElementById('nouveauPasseportTitle');
         const passeportNote = document.getElementById('passeportNote');
+        const demandeurSection = document.getElementById('demandeurSection');
 
         const fieldsAncien = ['numeroAncienPasseport', 'dateDelivranceAncienPasseport', 'dateExpirationAncienPasseport', 'paysDelivranceAncienPasseport'];
         const fieldsNouveau = ['numeroPasseport', 'dateDelivrance', 'dateExpiration', 'paysDelivrance'];
@@ -583,10 +642,16 @@
         const refVisa = document.getElementById('numeroReferenceVisaTransformable');
         const dateDebutVisa = document.getElementById('dateDebutVisaTransformable');
         const dateFinVisa = document.getElementById('dateExpirationVisaTransformable');
+        const demandeurRequiredFields = ['nom', 'prenom', 'dateNaissance', 'lieuNaissance', 'telephone', 'email', 'adresse', 'idSituationFamiliale', 'idNationalite'];
 
         if (typeDemandeSelect && ancienPasseportGroup && duplicataSection && visaTransformableSection) {
             if (typeDemandeSelect.value == "2") { // Transfert VISA
                 ancienPasseportGroup.style.display = 'block';
+                if (demandeurSection) demandeurSection.style.display = 'none';
+                demandeurRequiredFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.required = false;
+                });
                 fieldsAncien.forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.required = true;
@@ -615,6 +680,11 @@
                 if (dateFinVisa) dateFinVisa.required = true;
             } else if (typeDemandeSelect.value == "3") { // Duplicata
                 ancienPasseportGroup.style.display = 'none';
+                if (demandeurSection) demandeurSection.style.display = 'block';
+                demandeurRequiredFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.required = true;
+                });
                 fieldsAncien.forEach(id => {
                     const el = document.getElementById(id);
                     if (el) {
@@ -637,6 +707,11 @@
                 if (dateFinVisa) dateFinVisa.required = false;
             } else { // Nouveau Titre
                 ancienPasseportGroup.style.display = 'none';
+                if (demandeurSection) demandeurSection.style.display = 'block';
+                demandeurRequiredFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.required = true;
+                });
                 fieldsAncien.forEach(id => {
                     const el = document.getElementById(id);
                     if (el) {

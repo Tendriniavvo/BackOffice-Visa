@@ -52,27 +52,34 @@ DEMANDE NOUVEAU TITRE
 
 
 TRANSFERT VISA
-[DEMANDEUR]
-  → Saisir uniquement email ou numéro de téléphone
-  → Chercher dans la base
-       • SI TROUVÉ  → récupérer son ID directement
-                    → pas besoin de ressaisir ses infos
-       • SI ABSENT  → saisir toutes ses informations
-                    → créer le demandeur et récupérer son ID
-       ↓
 [ANCIEN PASSEPORT]
   → Saisir uniquement le numéro de l'ancien passeport
   → Chercher dans la base par numero_passeport
+
        • SI TROUVÉ  → récupérer son ID directement
+                    → infos demandeur chargées automatiquement
                     → pas besoin de ressaisir ses infos
                     → vérifier qu'il appartient bien à ce demandeur
+                         ↓
+                    → CRÉER UNE SEULE DEMANDE (type = 2, Transfert)
+                    → id_demande_parent = NULL
+                    → (pas besoin de demande nouveau titre)
+
        • SI ABSENT  → saisir toutes les infos de l'ancien passeport
                          • date_delivrance
                          • date_expiration
                          • pays_delivrance
-                    → créer l'ancien passeport (venant de l'ancien système)
+                    → saisir les infos du demandeur
+                    → créer le demandeur
+                    → créer l'ancien passeport
                     → statut = Actif (code 1)
                     → enregistrer dans Historique_Statut_Passeport
+                         ↓
+                    → CRÉER DEUX DEMANDES
+                         • DEMANDE PARENT (type = 1, Nouveau titre)
+                           id_demande_parent = NULL
+                         • DEMANDE ENFANT (type = 2, Transfert)
+                           id_demande_parent = ID du parent
        ↓
 [NOUVEAU PASSEPORT]
   → Saisir uniquement le numéro du nouveau passeport
@@ -90,33 +97,20 @@ TRANSFERT VISA
                     → enregistrer dans Historique_Statut_Passeport
   → L'ancien passeport reste dans la base (on ne le supprime pas)
        ↓
-[DEMANDE PARENT]
-  → Créer une demande de type Nouveau titre (type = 1)
-  → id_statut = 1 (Créée)
-  → id_demande_parent = NULL
-  → Cette demande représente la base administrative du dossier
-       ↓
-[DEMANDE ENFANT]
-  → Créer une demande de type Transfert VISA (type = 2)
-  → id_statut = 1 (Créée)
-  → id_demande_parent = ID de la demande parent créée juste avant
-  → Cette demande porte la logique du transfert
-       ↓
 [DEMANDE_TRANSFERT]
-  → Lier la demande enfant à :
+  → Lier la demande (enfant ou unique) à :
        • id_ancien_passeport → ID récupéré ou créé
        • id_nouveau_passeport → ID récupéré ou créé
   → C'est ici qu'on sait d'où vers où le visa est transféré
        ↓
 [PIÈCES JUSTIFICATIVES]
-  → Récupérer automatiquement les pièces requises pour le transfert
-  → Attacher sur la demande ENFANT
+  → Récupérer automatiquement les pièces requises
+  → Attacher sur la demande TRANSFERT
   → est_fourni = FALSE par défaut
        ↓
 [HISTORIQUE]
-  → Enregistrer statut Créée (code 1) pour la demande PARENT
-  → Enregistrer statut Créée (code 1) pour la demande ENFANT
-
+  → SI passeport trouvé   → enregistrer statut Créée pour la demande unique
+  → SI passeport absent   → enregistrer statut Créée pour PARENT + ENFANT
 
 DUPLICATA CARTE RÉSIDENT
 [DEMANDEUR]
