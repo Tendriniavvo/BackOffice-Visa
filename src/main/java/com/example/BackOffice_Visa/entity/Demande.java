@@ -19,8 +19,8 @@ public class Demande {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "id_visa_transformable", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "id_visa_transformable")
     private VisaTransformable visaTransformable;
 
     @Column(name = "date_demande", nullable = false)
@@ -44,6 +44,10 @@ public class Demande {
 
     @Column(name = "date_traitement")
     private LocalDate dateTraitement;
+
+    @ManyToOne
+    @JoinColumn(name = "id_demande_parent")
+    private Demande demandeParent;
 
     public Integer getId() {
         return id;
@@ -107,5 +111,13 @@ public class Demande {
 
     public void setDateTraitement(LocalDate dateTraitement) {
         this.dateTraitement = dateTraitement;
+    }
+
+    public Demande getDemandeParent() {
+        return demandeParent;
+    }
+
+    public void setDemandeParent(Demande demandeParent) {
+        this.demandeParent = demandeParent;
     }
 }
