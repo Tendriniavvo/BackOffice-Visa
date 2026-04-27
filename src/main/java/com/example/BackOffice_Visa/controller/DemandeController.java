@@ -4,11 +4,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -171,6 +175,9 @@ public class DemandeController {
                         @RequestParam("idNationalite") Integer idNationalite,
                         @RequestParam("numeroPasseport") String numeroPasseport,
                         @RequestParam(name = "numeroAncienPasseport", required = false) String numeroAncienPasseport,
+                        @RequestParam(name = "dateDelivranceAncienPasseport", required = false) LocalDate dateDelivranceAncienPasseport,
+                        @RequestParam(name = "dateExpirationAncienPasseport", required = false) LocalDate dateExpirationAncienPasseport,
+                        @RequestParam(name = "paysDelivranceAncienPasseport", required = false) String paysDelivranceAncienPasseport,
                         @RequestParam(name = "referenceCarteOriginale", required = false) String referenceCarteOriginale,
                         @RequestParam(name = "motifDuplicata", required = false) String motifDuplicata,
                         @RequestParam(name = "dateDebutCarteOriginale", required = false) LocalDate dateDebutCarteOriginale,
@@ -199,6 +206,9 @@ public class DemandeController {
                 wizard.setIdNationalite(idNationalite);
                 wizard.setNumeroPasseport(numeroPasseport);
                 wizard.setNumeroAncienPasseport(numeroAncienPasseport);
+                wizard.setDateDelivranceAncienPasseport(dateDelivranceAncienPasseport);
+                wizard.setDateExpirationAncienPasseport(dateExpirationAncienPasseport);
+                wizard.setPaysDelivranceAncienPasseport(paysDelivranceAncienPasseport);
                 wizard.setReferenceCarteOriginale(referenceCarteOriginale);
                 wizard.setMotifDuplicata(motifDuplicata);
                 wizard.setDateDebutCarteOriginale(dateDebutCarteOriginale);
@@ -459,11 +469,18 @@ public class DemandeController {
         }
 
         private Demande creerDemandeNouveauTitre(DemandeWizardData wizard, List<PieceJustificative> piecesEligibles) {
-                Demandeur demandeur = demandeurService
-                                .findByIdentity(wizard.getNom(), wizard.getPrenom(), wizard.getDateNaissance())
+                Demandeur demandeur = demandeurService.findByContact(wizard.getEmail(), wizard.getTelephone())
                                 .orElseGet(() -> demandeurService.save(construireDemandeur(wizard)));
 
                 Passeport savedPasseport = passeportService.findByNumero(wizard.getNumeroPasseport())
+                                .map(p -> {
+                                        if (p.getStatutActuel().getCode() != STATUT_PASSEPORT_ACTIF) {
+                                                throw new IllegalArgumentException(
+                                                                "Le passeport trouvé (" + p.getNumeroPasseport()
+                                                                                + ") n'est pas actif.");
+                                        }
+                                        return p;
+                                })
                                 .orElseGet(() -> {
                                         Passeport p = new Passeport();
                                         p.setDemandeur(demandeur);
@@ -474,16 +491,38 @@ public class DemandeController {
                                         p.setStatutActuel(refStatutPasseportService.findById(STATUT_PASSEPORT_ACTIF)
                                                         .orElseThrow(() -> new IllegalArgumentException(
                                                                         "Statut passeport #1 introuvable")));
-                                        return passeportService.save(p);
+                                        Passeport saved = passeportService.save(p);
+
+                                        // Enregistrer dans Historique_Statut_Passeport
+                                        HistoriqueStatutPasseport histP = new HistoriqueStatutPasseport();
+                                        histP.setPasseport(saved);
+                                        histP.setStatut(saved.getStatutActuel());
+                                        histP.setDateChangementStatut(LocalDateTime.now());
+                                        historiqueStatutPasseportService.save(histP);
+
+                                        return saved;
                                 });
 
-                VisaTransformable visaTransformable = new VisaTransformable();
-                visaTransformable.setDemandeur(demandeur);
-                visaTransformable.setPasseport(savedPasseport);
-                visaTransformable.setDateDebut(wizard.getDateDebutVisaTransformable());
-                visaTransformable.setDateExpiration(wizard.getDateExpirationVisaTransformable());
-                visaTransformable.setNumeroReference(wizard.getNumeroReferenceVisaTransformable());
-                VisaTransformable savedVisaTransformable = visaTransformableService.save(visaTransformable);
+                VisaTransformable savedVisaTransformable = visaTransformableService
+                                .findByNumeroReference(wizard.getNumeroReferenceVisaTransformable())
+                                .map(v -> {
+                                        if (v.getDateExpiration().isBefore(LocalDate.now())) {
+                                                throw new IllegalArgumentException(
+                                                                "Le visa transformable trouvé ("
+                                                                                + v.getNumeroReference()
+                                                                                + ") est expiré.");
+                                        }
+                                        return v;
+                                })
+                                .orElseGet(() -> {
+                                        VisaTransformable v = new VisaTransformable();
+                                        v.setDemandeur(demandeur);
+                                        v.setPasseport(savedPasseport);
+                                        v.setDateDebut(wizard.getDateDebutVisaTransformable());
+                                        v.setDateExpiration(wizard.getDateExpirationVisaTransformable());
+                                        v.setNumeroReference(wizard.getNumeroReferenceVisaTransformable());
+                                        return visaTransformableService.save(v);
+                                });
 
                 Demande demande = new Demande();
                 demande.setDemandeur(demandeur);
@@ -540,11 +579,9 @@ public class DemandeController {
                                         Passeport p = new Passeport();
                                         p.setDemandeur(demandeur);
                                         p.setNumeroPasseport(wizard.getNumeroAncienPasseport());
-                                        // On met des dates par défaut ou on pourrait demander plus d'infos,
-                                        // mais ici on simplifie selon etape.txt
-                                        p.setDateDelivrance(LocalDate.now().minusYears(5));
-                                        p.setDateExpiration(LocalDate.now().plusYears(5));
-                                        p.setPaysDelivrance("Inconnu (Ancien Système)");
+                                        p.setDateDelivrance(wizard.getDateDelivranceAncienPasseport());
+                                        p.setDateExpiration(wizard.getDateExpirationAncienPasseport());
+                                        p.setPaysDelivrance(wizard.getPaysDelivranceAncienPasseport());
                                         p.setStatutActuel(statutActif);
                                         Passeport saved = passeportService.save(p);
 
@@ -884,5 +921,91 @@ public class DemandeController {
         public String resetWizard(SessionStatus sessionStatus) {
                 sessionStatus.setComplete();
                 return "redirect:/demandes/nouveau";
+        }
+
+        @GetMapping("/api/search/demandeur")
+        @ResponseBody
+        public ResponseEntity<?> searchDemandeur(@RequestParam("q") String query) {
+                Optional<Demandeur> demandeur = demandeurService.findByContact(query, query);
+                if (demandeur.isPresent()) {
+                        Demandeur d = demandeur.get();
+                        Map<String, Object> response = new HashMap<>();
+                        response.put("found", true);
+                        response.put("nom", d.getNom());
+                        response.put("prenom", d.getPrenom());
+                        response.put("dateNaissance", d.getDateNaissance());
+                        response.put("lieuNaissance", d.getLieuNaissance());
+                        response.put("telephone", d.getTelephone());
+                        response.put("email", d.getEmail());
+                        response.put("adresse", d.getAdresse());
+                        response.put("idSituationFamiliale", d.getSituationFamiliale().getId());
+                        response.put("idNationalite", d.getNationalite().getId());
+                        return ResponseEntity.ok(response);
+                }
+                Map<String, Object> fail = new HashMap<>();
+                fail.put("found", false);
+                return ResponseEntity.ok(fail);
+        }
+
+        @GetMapping("/api/search/passeport")
+        @ResponseBody
+        public ResponseEntity<?> searchPasseport(@RequestParam("numero") String numero) {
+                Optional<Passeport> passeport = passeportService.findByNumero(numero);
+                if (passeport.isPresent()) {
+                        Passeport p = passeport.get();
+                        if (p.getStatutActuel().getCode() != STATUT_PASSEPORT_ACTIF) {
+                                Map<String, Object> error = new HashMap<>();
+                                error.put("message", "Le passeport trouvé n'est pas actif.");
+                                return ResponseEntity.badRequest().body(error);
+                        }
+                        Map<String, Object> response = new HashMap<>();
+                        response.put("found", true);
+                        response.put("dateDelivrance", p.getDateDelivrance());
+                        response.put("dateExpiration", p.getDateExpiration());
+                        response.put("paysDelivrance", p.getPaysDelivrance());
+
+                        // Ajouter les infos du demandeur
+                        Demandeur d = p.getDemandeur();
+                        if (d != null) {
+                                Map<String, Object> demandeurMap = new HashMap<>();
+                                demandeurMap.put("nom", d.getNom());
+                                demandeurMap.put("prenom", d.getPrenom());
+                                demandeurMap.put("dateNaissance", d.getDateNaissance());
+                                demandeurMap.put("lieuNaissance", d.getLieuNaissance());
+                                demandeurMap.put("telephone", d.getTelephone());
+                                demandeurMap.put("email", d.getEmail());
+                                demandeurMap.put("adresse", d.getAdresse());
+                                demandeurMap.put("idSituationFamiliale", d.getSituationFamiliale().getId());
+                                demandeurMap.put("idNationalite", d.getNationalite().getId());
+                                response.put("demandeur", demandeurMap);
+                        }
+
+                        return ResponseEntity.ok(response);
+                }
+                Map<String, Object> fail = new HashMap<>();
+                fail.put("found", false);
+                return ResponseEntity.ok(fail);
+        }
+
+        @GetMapping("/api/search/visa")
+        @ResponseBody
+        public ResponseEntity<?> searchVisa(@RequestParam("reference") String reference) {
+                Optional<VisaTransformable> visa = visaTransformableService.findByNumeroReference(reference);
+                if (visa.isPresent()) {
+                        VisaTransformable v = visa.get();
+                        if (v.getDateExpiration().isBefore(LocalDate.now())) {
+                                Map<String, Object> error = new HashMap<>();
+                                error.put("message", "Le visa transformable est expiré.");
+                                return ResponseEntity.badRequest().body(error);
+                        }
+                        Map<String, Object> response = new HashMap<>();
+                        response.put("found", true);
+                        response.put("dateDebut", v.getDateDebut());
+                        response.put("dateExpiration", v.getDateExpiration());
+                        return ResponseEntity.ok(response);
+                }
+                Map<String, Object> fail = new HashMap<>();
+                fail.put("found", false);
+                return ResponseEntity.ok(fail);
         }
 }

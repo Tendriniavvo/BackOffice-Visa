@@ -55,6 +55,14 @@
                     <section class="detail-card">
                         <h4>Demandeur</h4>
                         <div class="form-grid">
+                            <div class="form-group form-group-full">
+                                <label>Rechercher par email ou téléphone</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="searchDemandeurInput" placeholder="jean.rakoto@mail.com ou 034..." style="flex: 1;">
+                                    <button type="button" class="btn-primary" onclick="searchDemandeur()" style="width: auto; white-space: nowrap;">Rechercher</button>
+                                </div>
+                                <span id="searchDemandeurStatus" style="font-size: 0.85rem; margin-top: 4px; display: block;"></span>
+                            </div>
                             <div class="form-group">
                                 <label for="nom">Nom</label>
                                 <input id="nom" name="nom" type="text" value="${wizard.nom}" required>
@@ -101,31 +109,75 @@
                                     </c:forEach>
                                 </select>
                             </div>
+                            <div class="form-group form-group-full" id="demandeurNote" style="display: none;">
+                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">
+                                    Champs chargés automatiquement — non modifiables.
+                                </p>
+                            </div>
                         </div>
                     </section>
 
                     <section class="detail-card">
                         <h4>Passeport</h4>
                         <div class="form-grid">
-                            <div class="form-group" id="ancienPasseportGroup" style="${wizard.idTypeDemande == 2 ? 'display: flex;' : 'display: none;'}">
-                                <label for="numeroAncienPasseport">Numéro ancien passeport</label>
-                                <input id="numeroAncienPasseport" name="numeroAncienPasseport" type="text" value="${wizard.numeroAncienPasseport}" ${wizard.idTypeDemande == 2 ? 'required' : ''}>
+                            <!-- Groupe Ancien Passeport (uniquement pour Transfert) -->
+                            <div id="ancienPasseportGroup" class="form-group-full" style="${wizard.idTypeDemande == 2 ? 'display: block;' : 'display: none;'}">
+                                <h5 style="margin-bottom: var(--sp-3); color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">Ancien passeport</h5>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="numeroAncienPasseport">Numéro *</label>
+                                        <div style="display: flex; gap: 8px;">
+                                            <input id="numeroAncienPasseport" name="numeroAncienPasseport" type="text" value="${wizard.numeroAncienPasseport}" style="flex: 1;">
+                                            <button type="button" class="btn-primary" onclick="searchAncienPasseport()" style="width: auto; white-space: nowrap;">Rechercher</button>
+                                        </div>
+                                        <span id="searchAncienPasseportStatus" style="font-size: 0.85rem; margin-top: 4px; display: block;"></span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dateDelivranceAncienPasseport">Date de délivrance *</label>
+                                        <input id="dateDelivranceAncienPasseport" name="dateDelivranceAncienPasseport" type="date" value="${wizard.dateDelivranceAncienPasseport}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dateExpirationAncienPasseport">Date d'expiration *</label>
+                                        <input id="dateExpirationAncienPasseport" name="dateExpirationAncienPasseport" type="date" value="${wizard.dateExpirationAncienPasseport}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="paysDelivranceAncienPasseport">Pays de délivrance *</label>
+                                        <input id="paysDelivranceAncienPasseport" name="paysDelivranceAncienPasseport" type="text" value="${wizard.paysDelivranceAncienPasseport}">
+                                    </div>
+                                </div>
+                                <div style="margin: 16px 0; display: flex; justify-content: center; color: var(--text-secondary);">
+                                    <i data-lucide="arrow-down" style="width: 24px; height: 24px;"></i>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="numeroPasseport">${wizard.idTypeDemande == 2 ? 'Numéro nouveau passeport' : 'Numéro passeport'}</label>
-                                <input id="numeroPasseport" name="numeroPasseport" type="text" value="${wizard.numeroPasseport}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="paysDelivrance">Pays de délivrance</label>
-                                <input id="paysDelivrance" name="paysDelivrance" type="text" value="${wizard.paysDelivrance}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="dateDelivrance">Date délivrance</label>
-                                <input id="dateDelivrance" name="dateDelivrance" type="date" value="${wizard.dateDelivrance}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="dateExpiration">Date expiration</label>
-                                <input id="dateExpiration" name="dateExpiration" type="date" value="${wizard.dateExpiration}" required>
+
+                            <!-- Groupe Nouveau Passeport / Passeport Unique -->
+                            <div id="nouveauPasseportGroup" class="form-group-full">
+                                <h5 id="nouveauPasseportTitle" style="margin-bottom: var(--sp-3); color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display: ${wizard.idTypeDemande == 2 ? 'block' : 'none'};">Nouveau passeport</h5>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="numeroPasseport" id="labelNumeroPasseport">${wizard.idTypeDemande == 2 ? 'Numéro *' : 'Numéro de passeport *'}</label>
+                                        <div style="display: flex; gap: 8px;">
+                                            <input id="numeroPasseport" name="numeroPasseport" type="text" value="${wizard.numeroPasseport}" required style="flex: 1;">
+                                            <button type="button" class="btn-primary" onclick="searchPasseport()" style="width: auto; white-space: nowrap;">Rechercher</button>
+                                        </div>
+                                        <span id="searchPasseportStatus" style="font-size: 0.85rem; margin-top: 4px; display: block;"></span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dateDelivrance">Date de délivrance *</label>
+                                        <input id="dateDelivrance" name="dateDelivrance" type="date" value="${wizard.dateDelivrance}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dateExpiration">Date d'expiration *</label>
+                                        <input id="dateExpiration" name="dateExpiration" type="date" value="${wizard.dateExpiration}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="paysDelivrance">Pays de délivrance *</label>
+                                        <input id="paysDelivrance" name="paysDelivrance" type="text" value="${wizard.paysDelivrance}" required>
+                                    </div>
+                                </div>
+                                <p id="passeportNote" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 12px; display: ${wizard.idTypeDemande == 2 ? 'block' : 'none'};">
+                                    L'ancien passeport reste dans la base de données — il n'est pas supprimé.
+                                </p>
                             </div>
                         </div>
                     </section>
@@ -162,7 +214,11 @@
                         <div class="form-grid">
                             <div class="form-group form-group-full">
                                 <label for="numeroReferenceVisaTransformable">Référence visa transformable</label>
-                                <input id="numeroReferenceVisaTransformable" name="numeroReferenceVisaTransformable" type="text" value="${wizard.numeroReferenceVisaTransformable}" ${wizard.idTypeDemande == 3 ? '' : 'required'}>
+                                <div style="display: flex; gap: 8px;">
+                                    <input id="numeroReferenceVisaTransformable" name="numeroReferenceVisaTransformable" type="text" value="${wizard.numeroReferenceVisaTransformable}" ${wizard.idTypeDemande == 3 ? '' : 'required'} style="flex: 1;">
+                                    <button type="button" class="btn-primary" onclick="searchVisa()" style="width: auto; white-space: nowrap;">Rechercher</button>
+                                </div>
+                                <span id="searchVisaStatus" style="font-size: 0.85rem; margin-top: 4px; display: block;"></span>
                             </div>
                             <div class="form-group">
                                 <label for="dateDebutVisaTransformable">Date début visa transformable</label>
@@ -241,6 +297,249 @@
     const savedTheme = localStorage.getItem('visatrack-theme') || 'light';
     html.setAttribute('data-theme', savedTheme);
 
+    async function searchDemandeur() {
+        const query = document.getElementById('searchDemandeurInput').value;
+        const status = document.getElementById('searchDemandeurStatus');
+        if (!query) return;
+
+        status.textContent = "Recherche en cours...";
+        status.style.color = "var(--text-secondary)";
+
+        try {
+            const response = await fetch("/api/search/demandeur?q=" + encodeURIComponent(query));
+            const data = await response.json();
+
+            if (data.found) {
+                status.textContent = "Trouvé — informations chargées automatiquement";
+                status.style.color = "var(--green)";
+                
+                const note = document.getElementById('demandeurNote');
+                if (note) note.style.display = 'block';
+
+                const fields = ['nom', 'prenom', 'dateNaissance', 'lieuNaissance', 'telephone', 'email', 'adresse', 'idSituationFamiliale', 'idNationalite'];
+                fields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.value = data[id];
+                        el.classList.add('field-found');
+                        el.readOnly = true;
+                        if (el.tagName === 'SELECT') {
+                            el.style.pointerEvents = 'none';
+                            el.style.backgroundColor = 'var(--bg-secondary)';
+                        }
+                    }
+                });
+            } else {
+                status.textContent = "Non trouvé — veuillez remplir les informations";
+                status.style.color = "var(--red)";
+                
+                const note = document.getElementById('demandeurNote');
+                if (note) note.style.display = 'none';
+
+                const fields = ['nom', 'prenom', 'dateNaissance', 'lieuNaissance', 'telephone', 'email', 'adresse', 'idSituationFamiliale', 'idNationalite'];
+                fields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.remove('field-found');
+                        el.readOnly = false;
+                        if (el.tagName === 'SELECT') {
+                            el.style.pointerEvents = 'auto';
+                            el.style.backgroundColor = '';
+                        }
+                    }
+                });
+            }
+        } catch (error) {
+            status.textContent = "Erreur lors de la recherche";
+            status.style.color = "var(--red)";
+        }
+    }
+
+    async function searchAncienPasseport() {
+        const numero = document.getElementById('numeroAncienPasseport').value;
+        const status = document.getElementById('searchAncienPasseportStatus');
+        if (!numero) return;
+
+        status.textContent = "Recherche en cours...";
+        status.style.color = "var(--text-secondary)";
+
+        try {
+            const response = await fetch("/api/search/passeport?numero=" + encodeURIComponent(numero));
+            const data = await response.json();
+
+            if (response.ok && data.found) {
+                status.textContent = "Trouvé — informations chargées automatiquement";
+                status.style.color = "var(--green)";
+                
+                // Charger les infos du passeport
+                const passportFields = ['dateDelivranceAncienPasseport', 'dateExpirationAncienPasseport', 'paysDelivranceAncienPasseport'];
+                const dataFields = ['dateDelivrance', 'dateExpiration', 'paysDelivrance'];
+                passportFields.forEach((id, index) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.value = data[dataFields[index]];
+                        el.classList.add('field-found');
+                        el.readOnly = true;
+                    }
+                });
+
+                // Charger les infos du demandeur si présentes
+                if (data.demandeur) {
+                    const note = document.getElementById('demandeurNote');
+                    if (note) note.style.display = 'block';
+
+                    const demandeurStatus = document.getElementById('searchDemandeurStatus');
+                    if (demandeurStatus) {
+                        demandeurStatus.textContent = "Trouvé — informations chargées automatiquement";
+                        demandeurStatus.style.color = "var(--green)";
+                    }
+                    
+                    const fields = ['nom', 'prenom', 'dateNaissance', 'lieuNaissance', 'telephone', 'email', 'adresse', 'idSituationFamiliale', 'idNationalite'];
+                    fields.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.value = data.demandeur[id];
+                            el.classList.add('field-found');
+                            el.readOnly = true;
+                            if (el.tagName === 'SELECT') {
+                                el.style.pointerEvents = 'none';
+                                el.style.backgroundColor = 'var(--bg-secondary)';
+                            }
+                        }
+                    });
+                }
+            } else if (!response.ok) {
+                status.textContent = data.message || "Erreur lors de la recherche";
+                status.style.color = "var(--red)";
+                alert(data.message);
+            } else {
+                status.textContent = "Non trouvé — remplir les informations";
+                status.style.color = "var(--red)";
+                const passportFields = ['dateDelivranceAncienPasseport', 'dateExpirationAncienPasseport', 'paysDelivranceAncienPasseport'];
+                passportFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.remove('field-found');
+                        el.readOnly = false;
+                    }
+                });
+            }
+        } catch (error) {
+            status.textContent = "Erreur lors de la recherche";
+            status.style.color = "var(--red)";
+        }
+    }
+
+    async function searchPasseport() {
+        const numero = document.getElementById('numeroPasseport').value;
+        const status = document.getElementById('searchPasseportStatus');
+        if (!numero) return;
+
+        status.textContent = "Recherche en cours...";
+        status.style.color = "var(--text-secondary)";
+
+        try {
+            const response = await fetch("/api/search/passeport?numero=" + encodeURIComponent(numero));
+            const data = await response.json();
+
+            if (response.ok && data.found) {
+                status.textContent = "Trouvé — informations chargées automatiquement";
+                status.style.color = "var(--green)";
+                
+                const fields = ['dateDelivrance', 'dateExpiration', 'paysDelivrance'];
+                fields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.value = data[id];
+                        el.classList.add('field-found');
+                        el.readOnly = true;
+                    }
+                });
+            } else if (!response.ok) {
+                status.textContent = data.message || "Erreur lors de la recherche";
+                status.style.color = "var(--red)";
+                alert(data.message);
+                const fields = ['dateDelivrance', 'dateExpiration', 'paysDelivrance'];
+                fields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.remove('field-found');
+                        el.readOnly = false;
+                    }
+                });
+            } else {
+                status.textContent = "Non trouvé — veuillez remplir les informations";
+                status.style.color = "var(--red)";
+                const fields = ['dateDelivrance', 'dateExpiration', 'paysDelivrance'];
+                fields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.remove('field-found');
+                        el.readOnly = false;
+                    }
+                });
+            }
+        } catch (error) {
+            status.textContent = "Erreur lors de la recherche";
+            status.style.color = "var(--red)";
+        }
+    }
+
+    async function searchVisa() {
+        const reference = document.getElementById('numeroReferenceVisaTransformable').value;
+        const status = document.getElementById('searchVisaStatus');
+        if (!reference) return;
+
+        status.textContent = "Recherche en cours...";
+        status.style.color = "var(--text-secondary)";
+
+        try {
+            const response = await fetch("/api/search/visa?reference=" + encodeURIComponent(reference));
+            const data = await response.json();
+
+            if (response.ok && data.found) {
+                status.textContent = "Trouvé — visa valide jusqu'au " + data.dateExpiration;
+                status.style.color = "var(--green)";
+                
+                const fields = ['dateDebutVisaTransformable', 'dateExpirationVisaTransformable'];
+                fields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.value = data[id];
+                        el.classList.add('field-found');
+                        el.readOnly = true;
+                    }
+                });
+            } else if (!response.ok) {
+                status.textContent = data.message || "Erreur lors de la recherche";
+                status.style.color = "var(--red)";
+                alert(data.message);
+                const fields = ['dateDebutVisaTransformable', 'dateExpirationVisaTransformable'];
+                fields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.remove('field-found');
+                        el.readOnly = false;
+                    }
+                });
+            } else {
+                status.textContent = "Non trouvé — veuillez remplir les informations";
+                status.style.color = "var(--red)";
+                const fields = ['dateDebutVisaTransformable', 'dateExpirationVisaTransformable'];
+                fields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.remove('field-found');
+                        el.readOnly = false;
+                    }
+                });
+            }
+        } catch (error) {
+            status.textContent = "Erreur lors de la recherche";
+            status.style.color = "var(--red)";
+        }
+    }
+
     function updateThemeIcon(theme) {
         const iconName = theme === 'dark' ? 'moon' : 'sun';
         if (themeIcon) {
@@ -273,24 +572,42 @@
         const ancienPasseportGroup = document.getElementById('ancienPasseportGroup');
         const duplicataSection = document.getElementById('duplicataSection');
         const visaTransformableSection = document.getElementById('visaTransformableSection');
-        const inputAncien = document.getElementById('numeroAncienPasseport');
-        const labelNouveau = document.querySelector('label[for="numeroPasseport"]');
+        const labelNouveau = document.getElementById('labelNumeroPasseport');
+        const nouveauPasseportTitle = document.getElementById('nouveauPasseportTitle');
+        const passeportNote = document.getElementById('passeportNote');
+
+        const fieldsAncien = ['numeroAncienPasseport', 'dateDelivranceAncienPasseport', 'dateExpirationAncienPasseport', 'paysDelivranceAncienPasseport'];
+        const fieldsNouveau = ['numeroPasseport', 'dateDelivrance', 'dateExpiration', 'paysDelivrance'];
         const refCarte = document.getElementById('referenceCarteOriginale');
         const motifDup = document.getElementById('motifDuplicata');
         const refVisa = document.getElementById('numeroReferenceVisaTransformable');
         const dateDebutVisa = document.getElementById('dateDebutVisaTransformable');
         const dateFinVisa = document.getElementById('dateExpirationVisaTransformable');
 
-        if (typeDemandeSelect && ancienPasseportGroup && labelNouveau && duplicataSection && visaTransformableSection) {
-            // L'ID 2 correspond au Transfert VISA
-            if (typeDemandeSelect.value == "2") {
-                ancienPasseportGroup.style.display = 'flex';
-                if (inputAncien) {
-                    inputAncien.required = true;
+        if (typeDemandeSelect && ancienPasseportGroup && duplicataSection && visaTransformableSection) {
+            if (typeDemandeSelect.value == "2") { // Transfert VISA
+                ancienPasseportGroup.style.display = 'block';
+                fieldsAncien.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.required = true;
+                });
+                if (labelNouveau) labelNouveau.textContent = "Numéro *";
+                if (nouveauPasseportTitle) nouveauPasseportTitle.style.display = 'block';
+                if (passeportNote) {
+                    passeportNote.style.display = 'block';
+                    passeportNote.textContent = "L'ancien passeport reste dans la base de données — il n'est pas supprimé.";
                 }
-                labelNouveau.textContent = "Numéro nouveau passeport";
+                
                 duplicataSection.style.display = 'none';
+                visaTransformableSection.style.display = 'none'; // Pas de visa transformable à saisir pour transfert selon le sketch? 
+                // Ah, le sketch pour transfert ne montre pas de visa transformable, mais le processus dit qu'on en crée un.
+                // Je vais le laisser masqué si le sketch ne le montre pas, mais le processus dit "SI TROUVÉ... SI ABSENT... créer le visa".
+                // Attends, le sketch pour Transfert ne montre que : 1. Demandeur, 2. Passeports, 3. Type de visa, 4. Pièces.
+                // Donc je devrais masquer la section Visa Transformable pour Transfert aussi ? 
+                // Non, le processus dit qu'il y a un visa transformable.
+                // Je vais le laisser visible pour Transfert comme avant, car il est nécessaire.
                 visaTransformableSection.style.display = 'block';
+
                 if (refCarte) refCarte.required = false;
                 if (motifDup) motifDup.required = false;
                 if (refVisa) refVisa.required = true;
@@ -298,11 +615,19 @@
                 if (dateFinVisa) dateFinVisa.required = true;
             } else if (typeDemandeSelect.value == "3") { // Duplicata
                 ancienPasseportGroup.style.display = 'none';
-                if (inputAncien) {
-                    inputAncien.required = false;
-                    inputAncien.value = "";
-                }
-                labelNouveau.textContent = "Numéro passeport";
+                fieldsAncien.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.required = false;
+                        el.value = "";
+                        el.classList.remove('field-found');
+                        el.readOnly = false;
+                    }
+                });
+                if (labelNouveau) labelNouveau.textContent = "Numéro de passeport *";
+                if (nouveauPasseportTitle) nouveauPasseportTitle.style.display = 'none';
+                if (passeportNote) passeportNote.style.display = 'none';
+
                 duplicataSection.style.display = 'block';
                 visaTransformableSection.style.display = 'none';
                 if (refCarte) refCarte.required = true;
@@ -310,13 +635,21 @@
                 if (refVisa) refVisa.required = false;
                 if (dateDebutVisa) dateDebutVisa.required = false;
                 if (dateFinVisa) dateFinVisa.required = false;
-            } else {
+            } else { // Nouveau Titre
                 ancienPasseportGroup.style.display = 'none';
-                if (inputAncien) {
-                    inputAncien.required = false;
-                    inputAncien.value = "";
-                }
-                labelNouveau.textContent = "Numéro passeport";
+                fieldsAncien.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.required = false;
+                        el.value = "";
+                        el.classList.remove('field-found');
+                        el.readOnly = false;
+                    }
+                });
+                if (labelNouveau) labelNouveau.textContent = "Numéro de passeport *";
+                if (nouveauPasseportTitle) nouveauPasseportTitle.style.display = 'none';
+                if (passeportNote) passeportNote.style.display = 'none';
+
                 duplicataSection.style.display = 'none';
                 visaTransformableSection.style.display = 'block';
                 if (refCarte) refCarte.required = false;

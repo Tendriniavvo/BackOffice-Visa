@@ -414,6 +414,11 @@ svg.donut { width:140px; height:140px; }
   box-shadow:0 0 0 3px var(--accent-subtle);
 }
 
+.field-found {
+  background-color: var(--green-subtle) !important;
+  border-color: var(--green) !important;
+}
+
 .form-actions { display:flex; justify-content:flex-end; gap:var(--sp-3); }
 
 .form-alert {

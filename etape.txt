@@ -3,25 +3,36 @@ DEMANDE NOUVEAU TITRE
   → Saisir les informations du demandeur (nom, prénom, date naissance, contact...)
   → Chercher dans la base par email ou numéro de téléphone
        • SI TROUVÉ  → récupérer son ID et continuer
-       • SI ABSENT  → créer le demandeur et récupérer son ID
+                    → pas besoin de ressaisir ses infos
+       • SI ABSENT  → saisir toutes ses informations
+                    → créer le demandeur et récupérer son ID
        ↓
 [PASSEPORT]
-  → Saisir le numéro de passeport
+  → Saisir uniquement le numéro de passeport
   → Chercher dans la base par numero_passeport
-       • SI TROUVÉ  → récupérer son ID
+       • SI TROUVÉ  → récupérer son ID directement
+                    → pas besoin de ressaisir ses infos
                     → vérifier que le statut = Actif (code 1)
                     → si non actif → bloquer et alerter l'utilisateur
-       • SI ABSENT  → créer le passeport
+       • SI ABSENT  → saisir toutes les infos du passeport
+                         • date_delivrance
+                         • date_expiration
+                         • pays_delivrance
+                    → créer le passeport
                     → statut initial = Actif (code 1)
                     → enregistrer dans Historique_Statut_Passeport
        ↓
 [VISA TRANSFORMABLE]
-  → Saisir le numéro de référence du visa transformable
+  → Saisir uniquement le numéro de référence du visa transformable
   → Chercher dans la base par numero_reference
-       • SI TROUVÉ  → récupérer son ID
+       • SI TROUVÉ  → récupérer son ID directement
+                    → pas besoin de ressaisir ses infos
                     → vérifier que la date_expiration n'est pas dépassée
                     → si expiré → bloquer et alerter l'utilisateur
-       • SI ABSENT  → créer le visa transformable
+       • SI ABSENT  → saisir toutes les infos du visa
+                         • date_debut
+                         • date_expiration
+                    → créer le visa transformable
                     → lier au demandeur et au passeport récupérés
        ↓
 [DEMANDE]
@@ -34,37 +45,47 @@ DEMANDE NOUVEAU TITRE
 [PIÈCES JUSTIFICATIVES]
   → Récupérer automatiquement les pièces requises selon le type de visa
   → Attacher chaque pièce à la demande
-  → est_fourni = FALSE par défaut (le demandeur les fournira après)
+  → est_fourni = FALSE par défaut
        ↓
 [HISTORIQUE]
   → Enregistrer le statut initial = Créée (code 1)
 
 
-
 TRANSFERT VISA
 [DEMANDEUR]
-  → Saisir les informations du demandeur
-  → Chercher dans la base par email ou numéro de téléphone
-       • SI TROUVÉ  → récupérer son ID et continuer
-       • SI ABSENT  → créer le demandeur et récupérer son ID
+  → Saisir uniquement email ou numéro de téléphone
+  → Chercher dans la base
+       • SI TROUVÉ  → récupérer son ID directement
+                    → pas besoin de ressaisir ses infos
+       • SI ABSENT  → saisir toutes ses informations
+                    → créer le demandeur et récupérer son ID
        ↓
 [ANCIEN PASSEPORT]
-  → Saisir le numéro de l'ancien passeport
+  → Saisir uniquement le numéro de l'ancien passeport
   → Chercher dans la base par numero_passeport
-       • SI TROUVÉ  → récupérer son ID
+       • SI TROUVÉ  → récupérer son ID directement
+                    → pas besoin de ressaisir ses infos
                     → vérifier qu'il appartient bien à ce demandeur
-       • SI ABSENT  → créer l'ancien passeport (venant de l'ancien système)
+       • SI ABSENT  → saisir toutes les infos de l'ancien passeport
+                         • date_delivrance
+                         • date_expiration
+                         • pays_delivrance
+                    → créer l'ancien passeport (venant de l'ancien système)
                     → statut = Actif (code 1)
                     → enregistrer dans Historique_Statut_Passeport
-  → Récupérer son ID dans tous les cas
        ↓
 [NOUVEAU PASSEPORT]
-  → Saisir le numéro du nouveau passeport
+  → Saisir uniquement le numéro du nouveau passeport
   → Chercher dans la base par numero_passeport
-       • SI TROUVÉ  → récupérer son ID
+       • SI TROUVÉ  → récupérer son ID directement
+                    → pas besoin de ressaisir ses infos
                     → vérifier que le statut = Actif (code 1)
                     → vérifier que ce n'est pas le même que l'ancien
-       • SI ABSENT  → créer le nouveau passeport
+       • SI ABSENT  → saisir toutes les infos du nouveau passeport
+                         • date_delivrance
+                         • date_expiration
+                         • pays_delivrance
+                    → créer le nouveau passeport
                     → statut = Actif (code 1)
                     → enregistrer dans Historique_Statut_Passeport
   → L'ancien passeport reste dans la base (on ne le supprime pas)
@@ -83,7 +104,7 @@ TRANSFERT VISA
        ↓
 [DEMANDE_TRANSFERT]
   → Lier la demande enfant à :
-       • id_ancien_passeport → ID récupéré ou créé (ancien système)
+       • id_ancien_passeport → ID récupéré ou créé
        • id_nouveau_passeport → ID récupéré ou créé
   → C'est ici qu'on sait d'où vers où le visa est transféré
        ↓
@@ -97,36 +118,41 @@ TRANSFERT VISA
   → Enregistrer statut Créée (code 1) pour la demande ENFANT
 
 
-
 DUPLICATA CARTE RÉSIDENT
 [DEMANDEUR]
-  → Saisir les informations du demandeur
-  → Chercher dans la base par email ou numéro de téléphone
-       • SI TROUVÉ  → récupérer son ID et continuer
-       • SI ABSENT  → créer le demandeur et récupérer son ID
+  → Saisir uniquement email ou numéro de téléphone
+  → Chercher dans la base
+       • SI TROUVÉ  → récupérer son ID directement
+                    → pas besoin de ressaisir ses infos
+       • SI ABSENT  → saisir toutes ses informations
+                    → créer le demandeur et récupérer son ID
        ↓
 [PASSEPORT]
-  → Saisir le numéro de passeport
+  → Saisir uniquement le numéro de passeport
   → Chercher dans la base par numero_passeport
-       • SI TROUVÉ  → récupérer son ID
-       • SI ABSENT  → créer le passeport et récupérer son ID
+       • SI TROUVÉ  → récupérer son ID directement
+                    → pas besoin de ressaisir ses infos
+       • SI ABSENT  → saisir toutes les infos du passeport
+                         • date_delivrance
+                         • date_expiration
+                         • pays_delivrance
+                    → créer le passeport et récupérer son ID
                     → statut initial = Actif (code 1)
                     → enregistrer dans Historique_Statut_Passeport
        ↓
 [CARTE RÉSIDENTE ORIGINALE]
-  → Saisir la référence de la carte résidente perdue/volée
+  → Saisir uniquement la référence de la carte résidente
   → Chercher dans la base par reference
-       • SI TROUVÉE → récupérer son ID
+       • SI TROUVÉE → récupérer son ID directement
+                    → pas besoin de ressaisir ses infos
                     → vérifier qu'elle appartient bien à ce demandeur
-       • SI ABSENTE → la carte vient peut-être de l'ancien système
-                    → saisir manuellement les informations de la carte
-                         • reference
+       • SI ABSENTE → la carte vient de l'ancien système
+                    → saisir toutes les infos de la carte
                          • date_debut
                          • date_fin
                          • id_passeport (récupéré ou créé juste avant)
                     → créer la carte dans carte_resident
                     → récupérer son ID
-                    → continuer normalement
        ↓
 [MISE À JOUR PASSEPORT]
   → Saisir le motif : Perdu / Volé / Détérioré
@@ -147,7 +173,7 @@ DUPLICATA CARTE RÉSIDENT
   → Créer une demande de type Nouveau titre (type = 1)
   → id_statut = 1 (Créée)
   → id_demande_parent = NULL
-  → id_visa_transformable = NULL (pas de visa transformable ici)
+  → id_visa_transformable = NULL
   → Cette demande représente la base administrative du dossier
        ↓
 [DEMANDE ENFANT]
