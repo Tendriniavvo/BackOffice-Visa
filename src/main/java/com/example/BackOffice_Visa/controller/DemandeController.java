@@ -368,8 +368,22 @@ public class DemandeController {
                         return "redirect:/demandes/nouveau";
                 }
 
-                // Validation Visa Transformable (uniquement si ce n'est pas un duplicata)
-                if (wizard.getIdTypeDemande() != TYPE_DEMANDE_DUPLICATA) {
+                // Validation Visa Transformable
+                // - Obligatoire pour Nouveau titre
+                // - Pour Transfert: obligatoire uniquement si l'ancien passeport est absent (car on crée une demande parent Nouveau titre)
+                // - Non obligatoire pour Duplicata
+                boolean visaTransformableObligatoire = false;
+                if (wizard.getIdTypeDemande() != null) {
+                        if (wizard.getIdTypeDemande() == TYPE_DEMANDE_NOUVEAU_TITRE) {
+                                visaTransformableObligatoire = true;
+                        } else if (wizard.getIdTypeDemande() == TYPE_DEMANDE_TRANSFERT) {
+                                visaTransformableObligatoire = !passeportService
+                                                .findByNumero(wizard.getNumeroAncienPasseport())
+                                                .isPresent();
+                        }
+                }
+
+                if (visaTransformableObligatoire) {
                         if (wizard.getDateDebutVisaTransformable() == null
                                         || wizard.getDateExpirationVisaTransformable() == null
                                         || !StringUtils.hasText(wizard.getNumeroReferenceVisaTransformable())) {
@@ -636,20 +650,11 @@ public class DemandeController {
                                         return saved;
                                 });
 
-                // Enregistrer le visa transformable lié au nouveau passeport
-                VisaTransformable visaTransformable = new VisaTransformable();
-                visaTransformable.setDemandeur(demandeur);
-                visaTransformable.setPasseport(nouveauPasseport);
-                visaTransformable.setDateDebut(wizard.getDateDebutVisaTransformable());
-                visaTransformable.setDateExpiration(wizard.getDateExpirationVisaTransformable());
-                visaTransformable.setNumeroReference(wizard.getNumeroReferenceVisaTransformable());
-                VisaTransformable savedVisaTransformable = visaTransformableService.save(visaTransformable);
-
                 if (ancienPasseportTrouve) {
                         // CAS 1 : ancien passeport trouvé -> UNE SEULE DEMANDE (Transfert), pas de parent
                         Demande demandeUnique = new Demande();
                         demandeUnique.setDemandeur(demandeur);
-                        demandeUnique.setVisaTransformable(savedVisaTransformable);
+                        demandeUnique.setVisaTransformable(null);
                         demandeUnique.setTypeVisa(typeVisaService.findById(wizard.getIdTypeVisa())
                                         .orElseThrow(() -> new IllegalArgumentException("Type visa introuvable")));
                         demandeUnique.setTypeDemande(typeDemandeService.findById(TYPE_DEMANDE_TRANSFERT)
@@ -685,6 +690,15 @@ public class DemandeController {
                 }
 
                 // CAS 2 : ancien passeport absent -> DEUX DEMANDES (Parent Nouveau titre + Enfant Transfert)
+                // Enregistrer le visa transformable lié au nouveau passeport (obligatoire pour le parent Nouveau titre)
+                VisaTransformable visaTransformable = new VisaTransformable();
+                visaTransformable.setDemandeur(demandeur);
+                visaTransformable.setPasseport(nouveauPasseport);
+                visaTransformable.setDateDebut(wizard.getDateDebutVisaTransformable());
+                visaTransformable.setDateExpiration(wizard.getDateExpirationVisaTransformable());
+                visaTransformable.setNumeroReference(wizard.getNumeroReferenceVisaTransformable());
+                VisaTransformable savedVisaTransformable = visaTransformableService.save(visaTransformable);
+
                 Demande demandeParent = new Demande();
                 demandeParent.setDemandeur(demandeur);
                 demandeParent.setVisaTransformable(savedVisaTransformable);
@@ -701,7 +715,7 @@ public class DemandeController {
 
                 Demande demandeEnfant = new Demande();
                 demandeEnfant.setDemandeur(demandeur);
-                demandeEnfant.setVisaTransformable(savedVisaTransformable);
+                demandeEnfant.setVisaTransformable(null);
                 demandeEnfant.setTypeVisa(demandeParent.getTypeVisa());
                 demandeEnfant.setTypeDemande(typeDemandeService.findById(TYPE_DEMANDE_TRANSFERT)
                                 .orElseThrow(() -> new IllegalArgumentException("Type demande Transfert introuvable")));

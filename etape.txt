@@ -196,67 +196,27 @@ DUPLICATA CARTE RÉSIDENT
 
 
 
-  faites comma ca l'affichage 
-Nouvelle demande — Transfert VISA
+///////Regle//////
+TRANSFERT :
 
-Transfert d'un visa d'un ancien passeport vers un nouveau passeport. Les champs marqués * sont obligatoires.
+  DEMANDE PARENT (type=1, Nouveau titre)
+    → id_visa_transformable = OBLIGATOIRE
+    → car c'est un nouveau titre
 
-1
-Passeports
-Ancien passeport
-Numéro *
-FR-2024-00123
-Rechercher
-Non trouvé — remplir les infos
-Passeport non trouvé — saisir manuellement
-Date de délivrance *
+  DEMANDE ENFANT (type=2, Transfert)
+    → id_visa_transformable = NULL
+    → car le transfert ne transforme pas de visa
 
-jj/mm/aaaa
-Date d'expiration *
 
-jj/mm/aaaa
-Pays de délivrance *
-France
-Informations du demandeur — à saisir
-Nom *
-Rakoto
-Prénom *
-Jean
-Date de naissance *
 
-jj/mm/aaaa
-Nationalité *
 
-Français
-Téléphone *
-034...
-Email *
-email@mail.com
-→
-Nouveau passeport
-Numéro *
-FR-2026-00789
-Rechercher
-Trouvé — statut actif
-Date de délivrance
 
-01/01/2026
-Chargée automatiquement
-Date d'expiration
+NOUVEAU TITRE seul  →  demande unique   →  id_visa_transformable = obligatoire
 
-01/01/2036
-Chargée automatiquement
-Pays de délivrance
-France
-Chargée automatiquement
-L'ancien passeport reste dans la base de données — il n'est pas supprimé.
+TRANSFERT
+  → PARENT (type=1)  →  id_visa_transformable = obligatoire
+  → ENFANT (type=2)  →  id_visa_transformable = NULL
 
-2
-Type de visa
-Type de visa *
-
-Investisseur
-3
-Pièces justificatives
-
-si on ne troive pas le passport ,, on affiche les champ a saisir pour les info
+DUPLICATA
+  → PARENT (type=1)  →  id_visa_transformable = NULL
+  → ENFANT (type=3)  →  id_visa_transformable = NULL

@@ -363,6 +363,10 @@
         const status = document.getElementById('searchAncienPasseportStatus');
         const manualHint = document.getElementById('ancienPasseportManualHint');
         const demandeurSection = document.getElementById('demandeurSection');
+        const visaTransformableSection = document.getElementById('visaTransformableSection');
+        const refVisa = document.getElementById('numeroReferenceVisaTransformable');
+        const dateDebutVisa = document.getElementById('dateDebutVisaTransformable');
+        const dateFinVisa = document.getElementById('dateExpirationVisaTransformable');
         if (!numero) return;
 
         status.textContent = "Recherche en cours...";
@@ -377,6 +381,26 @@
                 status.textContent = "Trouvé — informations chargées automatiquement";
                 status.style.color = "var(--green)";
                 if (manualHint) manualHint.style.display = 'none';
+
+                if (visaTransformableSection) visaTransformableSection.style.display = 'none';
+                if (refVisa) {
+                    refVisa.required = false;
+                    refVisa.value = '';
+                    refVisa.classList.remove('field-found');
+                    refVisa.readOnly = false;
+                }
+                if (dateDebutVisa) {
+                    dateDebutVisa.required = false;
+                    dateDebutVisa.value = '';
+                    dateDebutVisa.classList.remove('field-found');
+                    dateDebutVisa.readOnly = false;
+                }
+                if (dateFinVisa) {
+                    dateFinVisa.required = false;
+                    dateFinVisa.value = '';
+                    dateFinVisa.classList.remove('field-found');
+                    dateFinVisa.readOnly = false;
+                }
                 
                 // Charger les infos du passeport
                 const passportFields = ['dateDelivranceAncienPasseport', 'dateExpirationAncienPasseport', 'paysDelivranceAncienPasseport'];
@@ -447,6 +471,11 @@
                 status.textContent = "Non trouvé — remplir les informations";
                 status.style.color = "var(--red)";
                 if (manualHint) manualHint.style.display = 'block';
+
+                if (visaTransformableSection) visaTransformableSection.style.display = 'block';
+                if (refVisa) refVisa.required = true;
+                if (dateDebutVisa) dateDebutVisa.required = true;
+                if (dateFinVisa) dateFinVisa.required = true;
                 const passportFields = ['dateDelivranceAncienPasseport', 'dateExpirationAncienPasseport', 'paysDelivranceAncienPasseport'];
                 passportFields.forEach(id => {
                     const el = document.getElementById(id);
@@ -664,20 +693,13 @@
                 }
                 
                 duplicataSection.style.display = 'none';
-                visaTransformableSection.style.display = 'none'; // Pas de visa transformable à saisir pour transfert selon le sketch? 
-                // Ah, le sketch pour transfert ne montre pas de visa transformable, mais le processus dit qu'on en crée un.
-                // Je vais le laisser masqué si le sketch ne le montre pas, mais le processus dit "SI TROUVÉ... SI ABSENT... créer le visa".
-                // Attends, le sketch pour Transfert ne montre que : 1. Demandeur, 2. Passeports, 3. Type de visa, 4. Pièces.
-                // Donc je devrais masquer la section Visa Transformable pour Transfert aussi ? 
-                // Non, le processus dit qu'il y a un visa transformable.
-                // Je vais le laisser visible pour Transfert comme avant, car il est nécessaire.
-                visaTransformableSection.style.display = 'block';
+                visaTransformableSection.style.display = 'none';
 
                 if (refCarte) refCarte.required = false;
                 if (motifDup) motifDup.required = false;
-                if (refVisa) refVisa.required = true;
-                if (dateDebutVisa) dateDebutVisa.required = true;
-                if (dateFinVisa) dateFinVisa.required = true;
+                if (refVisa) refVisa.required = false;
+                if (dateDebutVisa) dateDebutVisa.required = false;
+                if (dateFinVisa) dateFinVisa.required = false;
             } else if (typeDemandeSelect.value == "3") { // Duplicata
                 ancienPasseportGroup.style.display = 'none';
                 if (demandeurSection) demandeurSection.style.display = 'block';
