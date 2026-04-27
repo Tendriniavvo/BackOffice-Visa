@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="fr" data-theme="light">
@@ -107,8 +107,12 @@
                     <section class="detail-card">
                         <h4>Passeport</h4>
                         <div class="form-grid">
+                            <div class="form-group" id="ancienPasseportGroup" style="${wizard.idTypeDemande == 2 ? 'display: flex;' : 'display: none;'}">
+                                <label for="numeroAncienPasseport">Numéro ancien passeport</label>
+                                <input id="numeroAncienPasseport" name="numeroAncienPasseport" type="text" value="${wizard.numeroAncienPasseport}" ${wizard.idTypeDemande == 2 ? 'required' : ''}>
+                            </div>
                             <div class="form-group">
-                                <label for="numeroPasseport">Numéro passeport</label>
+                                <label for="numeroPasseport">${wizard.idTypeDemande == 2 ? 'Numéro nouveau passeport' : 'Numéro passeport'}</label>
                                 <input id="numeroPasseport" name="numeroPasseport" type="text" value="${wizard.numeroPasseport}" required>
                             </div>
                             <div class="form-group">
@@ -237,7 +241,38 @@
         });
     }
 
+    function toggleAncienPasseport() {
+        const typeDemandeSelect = document.getElementById('idTypeDemande');
+        const ancienPasseportGroup = document.getElementById('ancienPasseportGroup');
+        const inputAncien = document.getElementById('numeroAncienPasseport');
+        const labelNouveau = document.querySelector('label[for="numeroPasseport"]');
+
+        if (typeDemandeSelect && ancienPasseportGroup && labelNouveau) {
+            // L'ID 2 correspond au Transfert VISA
+            if (typeDemandeSelect.value == "2") {
+                ancienPasseportGroup.style.display = 'flex';
+                if (inputAncien) {
+                    inputAncien.required = true;
+                }
+                labelNouveau.textContent = "Numéro nouveau passeport";
+            } else {
+                ancienPasseportGroup.style.display = 'none';
+                if (inputAncien) {
+                    inputAncien.required = false;
+                    inputAncien.value = "";
+                }
+                labelNouveau.textContent = "Numéro passeport";
+            }
+        }
+    }
+
     updateThemeIcon(savedTheme);
+
+    const typeDemandeSelect = document.getElementById('idTypeDemande');
+    if (typeDemandeSelect) {
+        typeDemandeSelect.addEventListener('change', toggleAncienPasseport);
+        toggleAncienPasseport();
+    }
 
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {

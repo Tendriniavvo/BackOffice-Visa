@@ -6,7 +6,9 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.BackOffice_Visa.entity.Demandeur;
 import com.example.BackOffice_Visa.entity.Passeport;
+import com.example.BackOffice_Visa.entity.RefStatutPasseport;
 import com.example.BackOffice_Visa.repository.PasseportRepository;
 
 @Service
@@ -25,6 +27,14 @@ public class PasseportService {
 
     public Optional<Passeport> findById(Integer id) {
         return passeportRepository.findById(id);
+    }
+
+    public Optional<Passeport> findActiveByDemandeur(Demandeur demandeur, RefStatutPasseport statutActuel) {
+        return passeportRepository.findByDemandeurAndStatutActuel(demandeur, statutActuel);
+    }
+
+    public Optional<Passeport> findByNumero(String numeroPasseport) {
+        return passeportRepository.findByNumeroPasseport(numeroPasseport);
     }
 
     @Transactional

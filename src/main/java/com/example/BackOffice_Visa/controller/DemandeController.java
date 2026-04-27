@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.stereotype.Controller;
@@ -22,16 +23,21 @@ import org.springframework.util.StringUtils;
 
 import com.example.BackOffice_Visa.entity.Demande;
 import com.example.BackOffice_Visa.entity.DemandePiece;
+import com.example.BackOffice_Visa.entity.DemandeTransfert;
 import com.example.BackOffice_Visa.entity.Demandeur;
 import com.example.BackOffice_Visa.entity.HistoriqueStatutDemande;
+import com.example.BackOffice_Visa.entity.HistoriqueStatutPasseport;
 import com.example.BackOffice_Visa.entity.Passeport;
 import com.example.BackOffice_Visa.entity.PieceJustificative;
+import com.example.BackOffice_Visa.entity.RefStatutPasseport;
 import com.example.BackOffice_Visa.entity.VisaTransformable;
 import com.example.BackOffice_Visa.model.DemandeWizardData;
 import com.example.BackOffice_Visa.service.DemandePieceService;
 import com.example.BackOffice_Visa.service.DemandeService;
+import com.example.BackOffice_Visa.service.DemandeTransfertService;
 import com.example.BackOffice_Visa.service.DemandeurService;
 import com.example.BackOffice_Visa.service.HistoriqueStatutDemandeService;
+import com.example.BackOffice_Visa.service.HistoriqueStatutPasseportService;
 import com.example.BackOffice_Visa.service.NationaliteService;
 import com.example.BackOffice_Visa.service.PasseportService;
 import com.example.BackOffice_Visa.service.PieceJustificativeService;
@@ -65,6 +71,8 @@ public class DemandeController {
         private final HistoriqueStatutDemandeService historiqueStatutDemandeService;
         private final DemandeService demandeService;
         private final DemandePieceService demandePieceService;
+        private final DemandeTransfertService demandeTransfertService;
+        private final HistoriqueStatutPasseportService historiqueStatutPasseportService;
 
         public DemandeController(
                         SituationFamilialeService situationFamilialeService,
@@ -79,7 +87,9 @@ public class DemandeController {
                         RefStatutPasseportService refStatutPasseportService,
                         HistoriqueStatutDemandeService historiqueStatutDemandeService,
                         DemandeService demandeService,
-                        DemandePieceService demandePieceService) {
+                        DemandePieceService demandePieceService,
+                        DemandeTransfertService demandeTransfertService,
+                        HistoriqueStatutPasseportService historiqueStatutPasseportService) {
                 this.situationFamilialeService = situationFamilialeService;
                 this.nationaliteService = nationaliteService;
                 this.demandeurService = demandeurService;
@@ -93,6 +103,8 @@ public class DemandeController {
                 this.historiqueStatutDemandeService = historiqueStatutDemandeService;
                 this.demandeService = demandeService;
                 this.demandePieceService = demandePieceService;
+                this.demandeTransfertService = demandeTransfertService;
+                this.historiqueStatutPasseportService = historiqueStatutPasseportService;
         }
 
         @ModelAttribute("demandeWizard")
@@ -146,6 +158,7 @@ public class DemandeController {
                         @RequestParam("idSituationFamiliale") Integer idSituationFamiliale,
                         @RequestParam("idNationalite") Integer idNationalite,
                         @RequestParam("numeroPasseport") String numeroPasseport,
+                        @RequestParam(name = "numeroAncienPasseport", required = false) String numeroAncienPasseport,
                         @RequestParam("dateDelivrance") LocalDate dateDelivrance,
                         @RequestParam("dateExpiration") LocalDate dateExpiration,
                         @RequestParam("paysDelivrance") String paysDelivrance,
@@ -169,6 +182,7 @@ public class DemandeController {
                 wizard.setIdSituationFamiliale(idSituationFamiliale);
                 wizard.setIdNationalite(idNationalite);
                 wizard.setNumeroPasseport(numeroPasseport);
+                wizard.setNumeroAncienPasseport(numeroAncienPasseport);
                 wizard.setDateDelivrance(dateDelivrance);
                 wizard.setDateExpiration(dateExpiration);
                 wizard.setPaysDelivrance(paysDelivrance);
@@ -369,11 +383,17 @@ public class DemandeController {
                         return "redirect:/demandes/nouveau";
                 }
 
-                Demande savedDemande = traiterCreationParType(wizard, piecesEligibles);
+                try {
+                        Demande savedDemande = traiterCreationParType(wizard, piecesEligibles);
 
-                sessionStatus.setComplete();
-                redirectAttributes.addFlashAttribute("successMessage",
-                                "Demande créée avec succès (ID: " + savedDemande.getId() + ")");
+                        sessionStatus.setComplete();
+                        redirectAttributes.addFlashAttribute("successMessage",
+                                        "Demande créée avec succès (ID: " + savedDemande.getId() + ")");
+                } catch (IllegalArgumentException e) {
+                        redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+                        return "redirect:/demandes/nouveau";
+                }
+
                 return "redirect:/demandes/nouveau";
         }
 
@@ -404,15 +424,19 @@ public class DemandeController {
                                 .findByIdentity(wizard.getNom(), wizard.getPrenom(), wizard.getDateNaissance())
                                 .orElseGet(() -> demandeurService.save(construireDemandeur(wizard)));
 
-                Passeport passeport = new Passeport();
-                passeport.setDemandeur(demandeur);
-                passeport.setNumeroPasseport(wizard.getNumeroPasseport());
-                passeport.setDateDelivrance(wizard.getDateDelivrance());
-                passeport.setDateExpiration(wizard.getDateExpiration());
-                passeport.setPaysDelivrance(wizard.getPaysDelivrance());
-                passeport.setStatutActuel(refStatutPasseportService.findById(STATUT_PASSEPORT_ACTIF)
-                                .orElseThrow(() -> new IllegalArgumentException("Statut passeport #1 introuvable")));
-                Passeport savedPasseport = passeportService.save(passeport);
+                Passeport savedPasseport = passeportService.findByNumero(wizard.getNumeroPasseport())
+                                .orElseGet(() -> {
+                                        Passeport p = new Passeport();
+                                        p.setDemandeur(demandeur);
+                                        p.setNumeroPasseport(wizard.getNumeroPasseport());
+                                        p.setDateDelivrance(wizard.getDateDelivrance());
+                                        p.setDateExpiration(wizard.getDateExpiration());
+                                        p.setPaysDelivrance(wizard.getPaysDelivrance());
+                                        p.setStatutActuel(refStatutPasseportService.findById(STATUT_PASSEPORT_ACTIF)
+                                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                                        "Statut passeport #1 introuvable")));
+                                        return passeportService.save(p);
+                                });
 
                 VisaTransformable visaTransformable = new VisaTransformable();
                 visaTransformable.setDemandeur(demandeur);
@@ -454,7 +478,153 @@ public class DemandeController {
         }
 
         private Demande creerDemandeTransfertVisa(DemandeWizardData wizard, List<PieceJustificative> piecesEligibles) {
-                return creerDemandeLegacy(wizard, piecesEligibles);
+                // 1. DEMANDEUR
+                // Chercher dans la base par email ou numéro de téléphone
+                Demandeur demandeur = demandeurService.findByContact(wizard.getEmail(), wizard.getTelephone())
+                                .orElseGet(() -> demandeurService.save(construireDemandeur(wizard)));
+
+                // 2. ANCIEN PASSEPORT
+                RefStatutPasseport statutActif = refStatutPasseportService.findById(STATUT_PASSEPORT_ACTIF)
+                                .orElseThrow(() -> new IllegalArgumentException("Statut passeport actif introuvable"));
+
+                Passeport ancienPasseport = passeportService.findByNumero(wizard.getNumeroAncienPasseport())
+                                .map(p -> {
+                                        // SI TROUVÉ : vérifier qu'il appartient bien à ce demandeur
+                                        if (!p.getDemandeur().getId().equals(demandeur.getId())) {
+                                                throw new IllegalArgumentException(
+                                                                "L'ancien passeport saisi appartient à un autre demandeur.");
+                                        }
+                                        return p;
+                                })
+                                .orElseGet(() -> {
+                                        // SI ABSENT : créer l'ancien passeport (venant de l'ancien système)
+                                        Passeport p = new Passeport();
+                                        p.setDemandeur(demandeur);
+                                        p.setNumeroPasseport(wizard.getNumeroAncienPasseport());
+                                        // On met des dates par défaut ou on pourrait demander plus d'infos,
+                                        // mais ici on simplifie selon etape.txt
+                                        p.setDateDelivrance(LocalDate.now().minusYears(5));
+                                        p.setDateExpiration(LocalDate.now().plusYears(5));
+                                        p.setPaysDelivrance("Inconnu (Ancien Système)");
+                                        p.setStatutActuel(statutActif);
+                                        Passeport saved = passeportService.save(p);
+
+                                        // enregistrer dans Historique_Statut_Passeport
+                                        HistoriqueStatutPasseport histP = new HistoriqueStatutPasseport();
+                                        histP.setPasseport(saved);
+                                        histP.setStatut(statutActif);
+                                        histP.setDateChangementStatut(LocalDateTime.now());
+                                        historiqueStatutPasseportService.save(histP);
+
+                                        return saved;
+                                });
+
+                // 3. NOUVEAU PASSEPORT
+                // Chercher dans la base par numero_passeport
+                Passeport nouveauPasseport = passeportService.findByNumero(wizard.getNumeroPasseport())
+                                .map(p -> {
+                                        // SI TROUVÉ : vérifier que le statut = Actif (code 1)
+                                        if (p.getStatutActuel().getCode() != STATUT_PASSEPORT_ACTIF) {
+                                                throw new IllegalArgumentException(
+                                                                "Le nouveau passeport existe déjà mais n'est pas actif.");
+                                        }
+                                        // vérifier que ce n'est pas le même que l'ancien
+                                        if (p.getId().equals(ancienPasseport.getId())) {
+                                                throw new IllegalArgumentException(
+                                                                "Le nouveau passeport ne peut pas être identique à l'ancien.");
+                                        }
+                                        return p;
+                                })
+                                .orElseGet(() -> {
+                                        // SI ABSENT : créer le nouveau passeport
+                                        Passeport p = new Passeport();
+                                        p.setDemandeur(demandeur);
+                                        p.setNumeroPasseport(wizard.getNumeroPasseport());
+                                        p.setDateDelivrance(wizard.getDateDelivrance());
+                                        p.setDateExpiration(wizard.getDateExpiration());
+                                        p.setPaysDelivrance(wizard.getPaysDelivrance());
+                                        p.setStatutActuel(statutActif);
+                                        Passeport saved = passeportService.save(p);
+
+                                        // enregistrer dans Historique_Statut_Passeport
+                                        HistoriqueStatutPasseport histP = new HistoriqueStatutPasseport();
+                                        histP.setPasseport(saved);
+                                        histP.setStatut(statutActif);
+                                        histP.setDateChangementStatut(LocalDateTime.now());
+                                        historiqueStatutPasseportService.save(histP);
+
+                                        return saved;
+                                });
+
+                // Enregistrer le visa transformable lié au nouveau passeport
+                VisaTransformable visaTransformable = new VisaTransformable();
+                visaTransformable.setDemandeur(demandeur);
+                visaTransformable.setPasseport(nouveauPasseport);
+                visaTransformable.setDateDebut(wizard.getDateDebutVisaTransformable());
+                visaTransformable.setDateExpiration(wizard.getDateExpirationVisaTransformable());
+                visaTransformable.setNumeroReference(wizard.getNumeroReferenceVisaTransformable());
+                VisaTransformable savedVisaTransformable = visaTransformableService.save(visaTransformable);
+
+                // 4. DEMANDE PARENT (Type Nouveau Titre = 1)
+                Demande demandeParent = new Demande();
+                demandeParent.setDemandeur(demandeur);
+                demandeParent.setVisaTransformable(savedVisaTransformable);
+                demandeParent.setTypeVisa(typeVisaService.findById(wizard.getIdTypeVisa())
+                                .orElseThrow(() -> new IllegalArgumentException("Type visa introuvable")));
+                demandeParent.setTypeDemande(typeDemandeService.findById(TYPE_DEMANDE_NOUVEAU_TITRE)
+                                .orElseThrow(() -> new IllegalArgumentException(
+                                                "Type demande Nouveau Titre introuvable")));
+                demandeParent.setStatut(refStatutDemandeService.findById(STATUT_DEMANDE_CREEE)
+                                .orElseThrow(() -> new IllegalArgumentException("Statut demande Créée introuvable")));
+                demandeParent.setDateDemande(wizard.getDateDemande());
+                demandeParent.setDemandeParent(null);
+                Demande savedDemandeParent = demandeService.save(demandeParent);
+
+                // 5. DEMANDE ENFANT (Type Transfert VISA = 2)
+                Demande demandeEnfant = new Demande();
+                demandeEnfant.setDemandeur(demandeur);
+                demandeEnfant.setVisaTransformable(savedVisaTransformable);
+                demandeEnfant.setTypeVisa(demandeParent.getTypeVisa());
+                demandeEnfant.setTypeDemande(typeDemandeService.findById(TYPE_DEMANDE_TRANSFERT)
+                                .orElseThrow(() -> new IllegalArgumentException("Type demande Transfert introuvable")));
+                demandeEnfant.setStatut(refStatutDemandeService.findById(STATUT_DEMANDE_CREEE)
+                                .orElseThrow(() -> new IllegalArgumentException("Statut demande Créée introuvable")));
+                demandeEnfant.setDateDemande(wizard.getDateDemande());
+                demandeEnfant.setDemandeParent(savedDemandeParent);
+                Demande savedDemandeEnfant = demandeService.save(demandeEnfant);
+
+                // 6. DEMANDE_TRANSFERT
+                DemandeTransfert transfert = new DemandeTransfert();
+                transfert.setDemande(savedDemandeEnfant);
+                transfert.setAncienPasseport(ancienPasseport);
+                transfert.setNouveauPasseport(nouveauPasseport);
+                demandeTransfertService.save(transfert);
+
+                // 7. PIÈCES JUSTIFICATIVES sur la demande ENFANT
+                // est_fourni = FALSE par défaut selon etape.txt
+                for (PieceJustificative piece : piecesEligibles) {
+                        DemandePiece demandePiece = new DemandePiece();
+                        demandePiece.setDemande(savedDemandeEnfant);
+                        demandePiece.setPiece(piece);
+                        demandePiece.setEstFourni(false);
+                        demandePiece.setDateUpload(LocalDateTime.now());
+                        demandePieceService.save(demandePiece);
+                }
+
+                // 8. HISTORIQUE
+                HistoriqueStatutDemande histParent = new HistoriqueStatutDemande();
+                histParent.setDemande(savedDemandeParent);
+                histParent.setStatut(savedDemandeParent.getStatut());
+                histParent.setDateChangement(LocalDateTime.now());
+                historiqueStatutDemandeService.save(histParent);
+
+                HistoriqueStatutDemande histEnfant = new HistoriqueStatutDemande();
+                histEnfant.setDemande(savedDemandeEnfant);
+                histEnfant.setStatut(savedDemandeEnfant.getStatut());
+                histEnfant.setDateChangement(LocalDateTime.now());
+                historiqueStatutDemandeService.save(histEnfant);
+
+                return savedDemandeEnfant;
         }
 
         private Demande creerDemandeDuplicata(DemandeWizardData wizard, List<PieceJustificative> piecesEligibles) {
@@ -462,17 +632,23 @@ public class DemandeController {
         }
 
         private Demande creerDemandeLegacy(DemandeWizardData wizard, List<PieceJustificative> piecesEligibles) {
-                Demandeur demandeur = demandeurService.save(construireDemandeur(wizard));
+                Demandeur demandeur = demandeurService
+                                .findByIdentity(wizard.getNom(), wizard.getPrenom(), wizard.getDateNaissance())
+                                .orElseGet(() -> demandeurService.save(construireDemandeur(wizard)));
 
-                Passeport passeport = new Passeport();
-                passeport.setDemandeur(demandeur);
-                passeport.setNumeroPasseport(wizard.getNumeroPasseport());
-                passeport.setDateDelivrance(wizard.getDateDelivrance());
-                passeport.setDateExpiration(wizard.getDateExpiration());
-                passeport.setPaysDelivrance(wizard.getPaysDelivrance());
-                passeport.setStatutActuel(refStatutPasseportService.findById(STATUT_PASSEPORT_ACTIF)
-                                .orElseThrow(() -> new IllegalArgumentException("Statut passeport #1 introuvable")));
-                Passeport savedPasseport = passeportService.save(passeport);
+                Passeport savedPasseport = passeportService.findByNumero(wizard.getNumeroPasseport())
+                                .orElseGet(() -> {
+                                        Passeport p = new Passeport();
+                                        p.setDemandeur(demandeur);
+                                        p.setNumeroPasseport(wizard.getNumeroPasseport());
+                                        p.setDateDelivrance(wizard.getDateDelivrance());
+                                        p.setDateExpiration(wizard.getDateExpiration());
+                                        p.setPaysDelivrance(wizard.getPaysDelivrance());
+                                        p.setStatutActuel(refStatutPasseportService.findById(STATUT_PASSEPORT_ACTIF)
+                                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                                        "Statut passeport #1 introuvable")));
+                                        return passeportService.save(p);
+                                });
 
                 VisaTransformable visaTransformable = new VisaTransformable();
                 visaTransformable.setDemandeur(demandeur);

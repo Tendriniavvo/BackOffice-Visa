@@ -1,24 +1,39 @@
 DEMANDE NOUVEAU TITRE
 [DEMANDEUR]
-  → Vérifier si le demandeur existe déjà dans la base
-  → Si non : créer le demandeur (nom, prénom, date naissance, contact...)
+  → Saisir les informations du demandeur (nom, prénom, date naissance, contact...)
+  → Chercher dans la base par email ou numéro de téléphone
+       • SI TROUVÉ  → récupérer son ID et continuer
+       • SI ABSENT  → créer le demandeur et récupérer son ID
        ↓
 [PASSEPORT]
-  → Enregistrer le passeport du demandeur
-  → Statut initial = Actif (code 1)
+  → Saisir le numéro de passeport
+  → Chercher dans la base par numero_passeport
+       • SI TROUVÉ  → récupérer son ID
+                    → vérifier que le statut = Actif (code 1)
+                    → si non actif → bloquer et alerter l'utilisateur
+       • SI ABSENT  → créer le passeport
+                    → statut initial = Actif (code 1)
+                    → enregistrer dans Historique_Statut_Passeport
        ↓
 [VISA TRANSFORMABLE]
-  → Enregistrer le visa transformable lié au demandeur et au passeport
-  → (c'est le visa d'entrée qu'on va transformer en carte résident)
+  → Saisir le numéro de référence du visa transformable
+  → Chercher dans la base par numero_reference
+       • SI TROUVÉ  → récupérer son ID
+                    → vérifier que la date_expiration n'est pas dépassée
+                    → si expiré → bloquer et alerter l'utilisateur
+       • SI ABSENT  → créer le visa transformable
+                    → lier au demandeur et au passeport récupérés
        ↓
 [DEMANDE]
   → Créer la demande
   → id_type_demande = 1 (Nouveau titre)
   → id_statut = 1 (Créée)
   → id_demande_parent = NULL (pas de parent)
+  → lier au demandeur, passeport et visa transformable récupérés
        ↓
 [PIÈCES JUSTIFICATIVES]
-  → Attacher les pièces requises selon le type de visa
+  → Récupérer automatiquement les pièces requises selon le type de visa
+  → Attacher chaque pièce à la demande
   → est_fourni = FALSE par défaut (le demandeur les fournira après)
        ↓
 [HISTORIQUE]
@@ -26,12 +41,32 @@ DEMANDE NOUVEAU TITRE
 
 
 
-
 TRANSFERT VISA
+[DEMANDEUR]
+  → Saisir les informations du demandeur
+  → Chercher dans la base par email ou numéro de téléphone
+       • SI TROUVÉ  → récupérer son ID et continuer
+       • SI ABSENT  → créer le demandeur et récupérer son ID
+       ↓
+[ANCIEN PASSEPORT]
+  → Saisir le numéro de l'ancien passeport
+  → Chercher dans la base par numero_passeport
+       • SI TROUVÉ  → récupérer son ID
+                    → vérifier qu'il appartient bien à ce demandeur
+       • SI ABSENT  → créer l'ancien passeport (venant de l'ancien système)
+                    → statut = Actif (code 1)
+                    → enregistrer dans Historique_Statut_Passeport
+  → Récupérer son ID dans tous les cas
+       ↓
 [NOUVEAU PASSEPORT]
-  → Le demandeur existe déjà dans la base
-  → Enregistrer son nouveau passeport
-  → Statut = Actif (code 1)
+  → Saisir le numéro du nouveau passeport
+  → Chercher dans la base par numero_passeport
+       • SI TROUVÉ  → récupérer son ID
+                    → vérifier que le statut = Actif (code 1)
+                    → vérifier que ce n'est pas le même que l'ancien
+       • SI ABSENT  → créer le nouveau passeport
+                    → statut = Actif (code 1)
+                    → enregistrer dans Historique_Statut_Passeport
   → L'ancien passeport reste dans la base (on ne le supprime pas)
        ↓
 [DEMANDE PARENT]
@@ -48,13 +83,14 @@ TRANSFERT VISA
        ↓
 [DEMANDE_TRANSFERT]
   → Lier la demande enfant à :
-       • id_ancien_passeport → l'ancien passeport
-       • id_nouveau_passeport → le nouveau passeport
+       • id_ancien_passeport → ID récupéré ou créé (ancien système)
+       • id_nouveau_passeport → ID récupéré ou créé
   → C'est ici qu'on sait d'où vers où le visa est transféré
        ↓
 [PIÈCES JUSTIFICATIVES]
-  → Attacher les pièces requises pour le transfert
-  → sur la demande ENFANT
+  → Récupérer automatiquement les pièces requises pour le transfert
+  → Attacher sur la demande ENFANT
+  → est_fourni = FALSE par défaut
        ↓
 [HISTORIQUE]
   → Enregistrer statut Créée (code 1) pour la demande PARENT
@@ -62,18 +98,39 @@ TRANSFERT VISA
 
 
 
-
-
 DUPLICATA CARTE RÉSIDENT
+[DEMANDEUR]
+  → Saisir les informations du demandeur
+  → Chercher dans la base par email ou numéro de téléphone
+       • SI TROUVÉ  → récupérer son ID et continuer
+       • SI ABSENT  → créer le demandeur et récupérer son ID
+       ↓
+[PASSEPORT]
+  → Saisir le numéro de passeport
+  → Chercher dans la base par numero_passeport
+       • SI TROUVÉ  → récupérer son ID
+       • SI ABSENT  → créer le passeport et récupérer son ID
+                    → statut initial = Actif (code 1)
+       ↓
+[CARTE RÉSIDENTE ORIGINALE]
+  → Saisir la référence de la carte résidente perdue/volée
+  → Chercher dans la base par reference
+       • SI TROUVÉE → récupérer son ID
+                    → vérifier qu'elle appartient bien à ce demandeur
+       • SI ABSENTE → bloquer et alerter
+                    → impossible de faire un duplicata sans carte originale
+       ↓
 [MISE À JOUR PASSEPORT]
-  → Le demandeur et son passeport existent déjà
-  → Mettre à jour le statut du passeport
-       • Perdu → code 21
-       • Volé  → code 31
+  → Saisir le motif : Perdu / Volé / Détérioré
+  → Mettre à jour le statut du passeport selon le motif
+       • Perdu      → code 21
+       • Volé       → code 31
+       • Détérioré  → garder Actif (code 1), pas de changement statut
        ↓
 [HISTORIQUE PASSEPORT]
   → Enregistrer ce changement de statut dans Historique_Statut_Passeport
   → Pour garder la traçabilité
+  → (uniquement si Perdu ou Volé)
        ↓
 [DEMANDE PARENT]
   → Créer une demande de type Nouveau titre (type = 1)
@@ -90,13 +147,14 @@ DUPLICATA CARTE RÉSIDENT
        ↓
 [DEMANDE_DUPLICATA]
   → Lier la demande enfant à :
-       • id_carte_originale → la carte résidente perdue/volée
+       • id_carte_originale → ID récupéré depuis la recherche
        • motif → 'Perdu' ou 'Volé' ou 'Détérioré'
   → C'est ici qu'on sait quelle carte on est en train de refaire
        ↓
 [PIÈCES JUSTIFICATIVES]
-  → Attacher les pièces requises pour le duplicata
-  → sur la demande ENFANT
+  → Récupérer automatiquement les pièces requises pour le duplicata
+  → Attacher sur la demande ENFANT
+  → est_fourni = FALSE par défaut
        ↓
 [HISTORIQUE]
   → Enregistrer statut Créée (code 1) pour la demande PARENT

@@ -16,6 +16,9 @@ public class DemandeWizardData {
     private Integer idNationalite;
 
     private String numeroPasseport;
+    private String numeroAncienPasseport;
+    private String referenceCarteOriginale;
+    private String motifDuplicata;
     private LocalDate dateDelivrance;
     private LocalDate dateExpiration;
     private String paysDelivrance;
@@ -106,6 +109,30 @@ public class DemandeWizardData {
 
     public void setNumeroPasseport(String numeroPasseport) {
         this.numeroPasseport = numeroPasseport;
+    }
+
+    public String getNumeroAncienPasseport() {
+        return numeroAncienPasseport;
+    }
+
+    public void setNumeroAncienPasseport(String numeroAncienPasseport) {
+        this.numeroAncienPasseport = numeroAncienPasseport;
+    }
+
+    public String getReferenceCarteOriginale() {
+        return referenceCarteOriginale;
+    }
+
+    public void setReferenceCarteOriginale(String referenceCarteOriginale) {
+        this.referenceCarteOriginale = referenceCarteOriginale;
+    }
+
+    public String getMotifDuplicata() {
+        return motifDuplicata;
+    }
+
+    public void setMotifDuplicata(String motifDuplicata) {
+        this.motifDuplicata = motifDuplicata;
     }
 
     public LocalDate getDateDelivrance() {

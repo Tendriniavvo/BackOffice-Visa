@@ -12,4 +12,6 @@ public interface DemandeurRepository extends JpaRepository<Demandeur, Integer> {
             String nom,
             String prenom,
             LocalDate dateNaissance);
+
+    Optional<Demandeur> findByEmailOrTelephone(String email, String telephone);
 }

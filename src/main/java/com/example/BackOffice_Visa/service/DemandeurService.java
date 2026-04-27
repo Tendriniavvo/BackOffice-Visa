@@ -35,6 +35,10 @@ public class DemandeurService {
                 dateNaissance);
     }
 
+    public Optional<Demandeur> findByContact(String email, String telephone) {
+        return demandeurRepository.findByEmailOrTelephone(email, telephone);
+    }
+
     @Transactional
     public Demandeur save(Demandeur demandeur) {
         return demandeurRepository.save(demandeur);
