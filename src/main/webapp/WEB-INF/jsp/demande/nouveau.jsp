@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="fr" data-theme="light">
@@ -21,12 +21,12 @@
     <div class="content">
         <div class="page-header">
             <h2 class="content-title">Créer une nouvelle demande</h2>
-            <p class="content-text">Processus en 4 étapes : Demandeur → Passeport/Visa transformable → Type visa et pièces → Vérification.</p>
+            <p class="content-text">Formulaire unique de saisie avec sections métier.</p>
         </div>
 
         <div class="card form-card">
             <div class="card-header">
-                <span class="card-title">Formulaire par étapes</span>
+                <span class="card-title">Insertion de demande</span>
             </div>
             <div class="card-body">
                 <% if (request.getAttribute("successMessage") != null) { %>
@@ -36,15 +36,24 @@
                 <div class="form-alert" style="color:var(--red);background:var(--red-subtle);border-color:rgba(239,68,68,0.25);"><%= request.getAttribute("errorMessage") %></div>
                 <% } %>
 
-                <div class="wizard-steps">
-                    <div class="wizard-step ${step == 1 ? 'active' : ''}">1. Infos demandeur</div>
-                    <div class="wizard-step ${step == 2 ? 'active' : ''}">2. Passeport & Visa transfo</div>
-                    <div class="wizard-step ${step == 3 ? 'active' : ''}">3. Type visa & pièces</div>
-                    <div class="wizard-step ${step == 4 ? 'active' : ''}">4. Récapitulatif</div>
-                </div>
+                <form action="/demandes/nouveau/soumettre" method="post" class="demand-form">
+                    <section class="detail-card">
+                        <h4>Type de demande</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="idTypeDemande">Type de demande</label>
+                                <select id="idTypeDemande" name="idTypeDemande" required>
+                                    <option value="">Choisir un type de demande</option>
+                                    <c:forEach items="${typeDemandes}" var="typeDemande">
+                                        <option value="${typeDemande.id}" ${wizard.idTypeDemande == typeDemande.id ? 'selected' : ''}>${typeDemande.libelle}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
 
-                <c:if test="${step == 1}">
-                    <form action="/demandes/nouveau/etape1" method="post" class="demand-form">
+                    <section class="detail-card">
+                        <h4>Demandeur</h4>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="nom">Nom</label>
@@ -93,15 +102,10 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="form-actions">
-                            <a href="/" class="btn-table">Annuler</a>
-                            <button type="submit" class="btn-primary">Continuer → Étape 2</button>
-                        </div>
-                    </form>
-                </c:if>
+                    </section>
 
-                <c:if test="${step == 2}">
-                    <form action="/demandes/nouveau/etape2" method="post" class="demand-form">
+                    <section class="detail-card">
+                        <h4>Passeport</h4>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="numeroPasseport">Numéro passeport</label>
@@ -119,6 +123,12 @@
                                 <label for="dateExpiration">Date expiration</label>
                                 <input id="dateExpiration" name="dateExpiration" type="date" value="${wizard.dateExpiration}" required>
                             </div>
+                        </div>
+                    </section>
+
+                    <section class="detail-card">
+                        <h4>Visa transformable</h4>
+                        <div class="form-grid">
                             <div class="form-group form-group-full">
                                 <label for="numeroReferenceVisaTransformable">Référence visa transformable</label>
                                 <input id="numeroReferenceVisaTransformable" name="numeroReferenceVisaTransformable" type="text" value="${wizard.numeroReferenceVisaTransformable}" required>
@@ -132,36 +142,20 @@
                                 <input id="dateExpirationVisaTransformable" name="dateExpirationVisaTransformable" type="date" value="${wizard.dateExpirationVisaTransformable}" required>
                             </div>
                         </div>
-                        <div class="form-actions">
-                            <a href="/demandes/nouveau?step=1" class="btn-table">← Étape 1</a>
-                            <button type="submit" class="btn-primary">Continuer → Étape 3</button>
-                        </div>
-                    </form>
-                </c:if>
+                    </section>
 
-                <c:if test="${step == 3}">
-                    <form action="/demandes/nouveau/etape3" method="post" class="demand-form">
+                    <section class="detail-card">
+                        <h4>Informations de la demande</h4>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="idTypeVisa">Type de visa</label>
-                                <select id="idTypeVisa" name="idTypeVisa" required onchange="window.location='/demandes/nouveau?step=3&typeVisaId=' + this.value">
+                                <select id="idTypeVisa" name="idTypeVisa" required>
                                     <option value="">Choisir un type de visa</option>
                                     <c:forEach items="${typeVisas}" var="typeVisa">
                                         <option value="${typeVisa.id}" ${wizard.idTypeVisa == typeVisa.id ? 'selected' : ''}>${typeVisa.libelle}</option>
                                     </c:forEach>
                                 </select>
                             </div>
-
-                            <div class="form-group">
-                                <label for="idTypeDemande">Type de demande</label>
-                                <select id="idTypeDemande" name="idTypeDemande" required>
-                                    <option value="">Choisir un type de demande</option>
-                                    <c:forEach items="${typeDemandes}" var="typeDemande">
-                                        <option value="${typeDemande.id}" ${wizard.idTypeDemande == typeDemande.id ? 'selected' : ''}>${typeDemande.libelle}</option>
-                                    </c:forEach>
-                                </select>
-                            </div>
-
                             <div class="form-group">
                                 <label for="dateDemande">Date de demande</label>
                                 <input id="dateDemande" name="dateDemande" type="date" value="${wizard.dateDemande}" required>
@@ -181,134 +175,23 @@
                             </div>
 
                             <h3 class="pieces-title">Pièces spécifiques au type de visa</h3>
-                            <div class="pieces-grid">
-                                <c:choose>
-                                    <c:when test="${empty piecesSpecifiques}">
-                                        <p class="content-text">Choisis un type de visa pour voir les pièces spécifiques.</p>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <c:forEach items="${piecesSpecifiques}" var="piece">
-                                            <label class="piece-item">
-                                                <input type="checkbox" name="pieceFournieIds" value="${piece.id}"
-                                                       ${wizard.pieceFournieIds != null && wizard.pieceFournieIds.contains(piece.id) ? 'checked' : ''}>
-                                                <span>${piece.libelle} <small>${piece.obligatoire ? '(obligatoire)' : '(optionnelle)'}</small></span>
-                                            </label>
-                                        </c:forEach>
-                                    </c:otherwise>
-                                </c:choose>
+                            <div class="pieces-grid" id="piecesSpecifiquesContainer">
+                                <c:forEach items="${piecesSpecifiques}" var="piece">
+                                    <label class="piece-item piece-item-specifique" data-type-visa-id="${piece.typeVisa.id}">
+                                        <input type="checkbox" name="pieceFournieIds" value="${piece.id}"
+                                               ${wizard.pieceFournieIds != null && wizard.pieceFournieIds.contains(piece.id) ? 'checked' : ''}>
+                                        <span>${piece.libelle} <small>${piece.obligatoire ? '(obligatoire)' : '(optionnelle)'}</small></span>
+                                    </label>
+                                </c:forEach>
                             </div>
                         </div>
+                    </section>
 
-                        <div class="form-actions">
-                            <a href="/demandes/nouveau?step=2" class="btn-table">← Étape 2</a>
-                            <button type="submit" class="btn-primary">Voir le récapitulatif</button>
-                        </div>
-                    </form>
-                </c:if>
-
-                <c:if test="${step == 4}">
-                    <div class="detail-sheet">
-                        <div class="detail-sheet-header">
-                            <div>
-                                <p class="detail-eyebrow">Fiche de vérification</p>
-                                <h3 class="detail-title">Dossier de ${wizard.nom} ${wizard.prenom}</h3>
-                                <p class="detail-subtitle">Vérifie les informations avant l’enregistrement définitif de la demande.</p>
-                            </div>
-                            <span class="detail-status">Prêt à enregistrer</span>
-                        </div>
-
-                        <div class="detail-grid-2">
-                            <section class="detail-card">
-                                <h4>Identité du demandeur</h4>
-                                <div class="detail-list">
-                                    <div class="detail-row"><span>Nom</span><strong>${wizard.nom}</strong></div>
-                                    <div class="detail-row"><span>Prénom</span><strong>${wizard.prenom}</strong></div>
-                                    <div class="detail-row"><span>Date de naissance</span><strong>${wizard.dateNaissance}</strong></div>
-                                    <div class="detail-row"><span>Lieu de naissance</span><strong>${wizard.lieuNaissance}</strong></div>
-                                    <div class="detail-row"><span>Situation familiale</span><strong>${selectedSituation != null ? selectedSituation.libelle : '-'}</strong></div>
-                                    <div class="detail-row"><span>Nationalité</span><strong>${selectedNationalite != null ? selectedNationalite.libelle : '-'}</strong></div>
-                                </div>
-                            </section>
-
-                            <section class="detail-card">
-                                <h4>Coordonnées</h4>
-                                <div class="detail-list">
-                                    <div class="detail-row"><span>Téléphone</span><strong>${wizard.telephone}</strong></div>
-                                    <div class="detail-row"><span>Email</span><strong>${wizard.email}</strong></div>
-                                    <div class="detail-row"><span>Adresse</span><strong>${wizard.adresse}</strong></div>
-                                </div>
-                            </section>
-                        </div>
-
-                        <div class="detail-grid-2">
-                            <section class="detail-card">
-                                <h4>Passeport</h4>
-                                <div class="detail-list">
-                                    <div class="detail-row"><span>Numéro</span><strong>${wizard.numeroPasseport}</strong></div>
-                                    <div class="detail-row"><span>Pays de délivrance</span><strong>${wizard.paysDelivrance}</strong></div>
-                                    <div class="detail-row"><span>Date délivrance</span><strong>${wizard.dateDelivrance}</strong></div>
-                                    <div class="detail-row"><span>Date expiration</span><strong>${wizard.dateExpiration}</strong></div>
-                                </div>
-                            </section>
-
-                            <section class="detail-card">
-                                <h4>Visa transformable</h4>
-                                <div class="detail-list">
-                                    <div class="detail-row"><span>Référence</span><strong>${wizard.numeroReferenceVisaTransformable}</strong></div>
-                                    <div class="detail-row"><span>Date début</span><strong>${wizard.dateDebutVisaTransformable}</strong></div>
-                                    <div class="detail-row"><span>Date expiration</span><strong>${wizard.dateExpirationVisaTransformable}</strong></div>
-                                </div>
-                            </section>
-                        </div>
-
-                        <section class="detail-card">
-                            <h4>Informations de la demande</h4>
-                            <div class="detail-grid-3">
-                                <div class="detail-kpi">
-                                    <span>Type de visa</span>
-                                    <strong>${selectedTypeVisa != null ? selectedTypeVisa.libelle : '-'}</strong>
-                                </div>
-                                <div class="detail-kpi">
-                                    <span>Type de demande</span>
-                                    <strong>${selectedTypeDemande != null ? selectedTypeDemande.libelle : '-'}</strong>
-                                </div>
-                                <div class="detail-kpi">
-                                    <span>Date de demande</span>
-                                    <strong>${wizard.dateDemande}</strong>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section class="detail-card">
-                            <div class="detail-card-head-inline">
-                                <h4>Pièces justificatives sélectionnées</h4>
-                                <span class="detail-counter">${empty piecesSelectionnees ? 0 : piecesSelectionnees.size()} pièce(s)</span>
-                            </div>
-                            <c:choose>
-                                <c:when test="${empty piecesSelectionnees}">
-                                    <p class="detail-empty">Aucune pièce n’a été cochée.</p>
-                                </c:when>
-                                <c:otherwise>
-                                    <div class="detail-tags">
-                                        <c:forEach items="${piecesSelectionnees}" var="piece">
-                                            <span class="detail-tag ${piece.obligatoire ? 'required' : ''}">
-                                                ${piece.libelle}
-                                                <small>${piece.obligatoire ? 'Obligatoire' : 'Optionnelle'}</small>
-                                            </span>
-                                        </c:forEach>
-                                    </div>
-                                </c:otherwise>
-                            </c:choose>
-                        </section>
-
-                        <form action="/demandes/nouveau/finaliser" method="post">
-                            <div class="form-actions detail-actions">
-                                <a href="/demandes/nouveau?step=3" class="btn-table">← Retour étape 3</a>
-                                <button type="submit" class="btn-primary">Confirmer et enregistrer</button>
-                            </div>
-                        </form>
+                    <div class="form-actions">
+                        <a href="/demandes" class="btn-table">Annuler</a>
+                        <button type="submit" class="btn-primary">Enregistrer la demande</button>
                     </div>
-                </c:if>
+                </form>
 
                 <form action="/demandes/nouveau/reinitialiser" method="post" style="margin-top:12px; text-align:right;">
                     <button type="submit" class="btn-table">Réinitialiser le formulaire</button>
@@ -335,6 +218,25 @@
         }
     }
 
+    function togglePiecesSpecifiquesByTypeVisa() {
+        const selectTypeVisa = document.getElementById('idTypeVisa');
+        const selectedTypeVisaId = selectTypeVisa ? selectTypeVisa.value : '';
+        const piecesSpecifiques = document.querySelectorAll('.piece-item-specifique');
+
+        piecesSpecifiques.forEach((item) => {
+            const itemTypeVisaId = item.getAttribute('data-type-visa-id');
+            const visible = selectedTypeVisaId && itemTypeVisaId === selectedTypeVisaId;
+            item.style.display = visible ? 'flex' : 'none';
+
+            if (!visible) {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    checkbox.checked = false;
+                }
+            }
+        });
+    }
+
     updateThemeIcon(savedTheme);
 
     if (themeToggle) {
@@ -345,6 +247,12 @@
             localStorage.setItem('visatrack-theme', next);
             updateThemeIcon(next);
         });
+    }
+
+    const typeVisaSelect = document.getElementById('idTypeVisa');
+    if (typeVisaSelect) {
+        typeVisaSelect.addEventListener('change', togglePiecesSpecifiquesByTypeVisa);
+        togglePiecesSpecifiquesByTypeVisa();
     }
 
     document.querySelectorAll('.nav-item').forEach((item) => {
