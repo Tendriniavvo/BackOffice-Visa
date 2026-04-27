@@ -696,50 +696,20 @@ public class DemandeController {
                                         return saved;
                                 });
 
-                // 3. CARTE RÉSIDENTE ORIGINALE
-                CarteResident carteOriginale = carteResidentService.findByReference(wizard.getReferenceCarteOriginale())
-                                .map(c -> {
-                                        if (!c.getDemande().getDemandeur().getId().equals(demandeur.getId())) {
-                                                throw new IllegalArgumentException(
-                                                                "La carte résidente originale n'appartient pas à ce demandeur.");
-                                        }
-                                        return c;
-                                })
-                                .orElseGet(() -> {
-                                        // SI ABSENTE : la carte vient peut-être de l'ancien système
-                                        if (wizard.getDateDebutCarteOriginale() == null
-                                                        || wizard.getDateFinCarteOriginale() == null) {
-                                                throw new IllegalArgumentException(
-                                                                "La carte originale est introuvable. Veuillez saisir ses dates (début et fin) car elle provient probablement de l'ancien système.");
-                                        }
-
-                                        // Créer une demande fictive pour porter la carte (puisque la carte est liée à
-                                        // une demande)
-                                        // Ou simplement créer la carte si le modèle le permet (mais fk_carte_demande
-                                        // est NOT NULL)
-                                        // Selon le schéma, fk_carte_demande est obligatoire.
-                                        // Pour simplifier selon les instructions, on crée la carte résidente.
-                                        // Note: Dans un vrai système, on créerait une demande historique.
-
-                                        // On crée une demande "historique" minimale pour satisfaire la contrainte
-                                        Demande demandeHist = new Demande();
-                                        demandeHist.setDemandeur(demandeur);
-                                        demandeHist.setTypeDemande(
-                                                        typeDemandeService.findById(TYPE_DEMANDE_NOUVEAU_TITRE).get());
-                                        demandeHist.setTypeVisa(typeVisaService.findById(wizard.getIdTypeVisa()).get());
-                                        demandeHist.setStatut(
-                                                        refStatutDemandeService.findById(STATUT_DEMANDE_CREEE).get());
-                                        demandeHist.setDateDemande(wizard.getDateDebutCarteOriginale());
-                                        Demande savedDemandeHist = demandeService.save(demandeHist);
-
-                                        CarteResident newCarte = new CarteResident();
-                                        newCarte.setReference(wizard.getReferenceCarteOriginale());
-                                        newCarte.setDateDebut(wizard.getDateDebutCarteOriginale());
-                                        newCarte.setDateFin(wizard.getDateFinCarteOriginale());
-                                        newCarte.setDemande(savedDemandeHist);
-                                        newCarte.setPasseport(passeport);
-                                        return carteResidentService.save(newCarte);
-                                });
+                // 6. DEMANDE PARENT (Type Nouveau Titre = 1)
+                Demande demandeParent = new Demande();
+                demandeParent.setDemandeur(demandeur);
+                demandeParent.setVisaTransformable(null); // Pas de visa transformable pour duplicata
+                demandeParent.setTypeVisa(typeVisaService.findById(wizard.getIdTypeVisa())
+                                .orElseThrow(() -> new IllegalArgumentException("Type visa introuvable")));
+                demandeParent.setTypeDemande(typeDemandeService.findById(TYPE_DEMANDE_NOUVEAU_TITRE)
+                                .orElseThrow(() -> new IllegalArgumentException(
+                                                "Type demande Nouveau Titre introuvable")));
+                demandeParent.setStatut(refStatutDemandeService.findById(STATUT_DEMANDE_CREEE)
+                                .orElseThrow(() -> new IllegalArgumentException("Statut demande Créée introuvable")));
+                demandeParent.setDateDemande(wizard.getDateDemande());
+                demandeParent.setDemandeParent(null);
+                Demande savedDemandeParent = demandeService.save(demandeParent);
 
                 // 4. MISE À JOUR PASSEPORT selon le motif
                 String motif = wizard.getMotifDuplicata();
@@ -761,20 +731,32 @@ public class DemandeController {
                         historiqueStatutPasseportService.save(histP);
                 }
 
-                // 6. DEMANDE PARENT (Type Nouveau Titre = 1)
-                Demande demandeParent = new Demande();
-                demandeParent.setDemandeur(demandeur);
-                demandeParent.setVisaTransformable(null); // Pas de visa transformable pour duplicata
-                demandeParent.setTypeVisa(typeVisaService.findById(wizard.getIdTypeVisa())
-                                .orElseThrow(() -> new IllegalArgumentException("Type visa introuvable")));
-                demandeParent.setTypeDemande(typeDemandeService.findById(TYPE_DEMANDE_NOUVEAU_TITRE)
-                                .orElseThrow(() -> new IllegalArgumentException(
-                                                "Type demande Nouveau Titre introuvable")));
-                demandeParent.setStatut(refStatutDemandeService.findById(STATUT_DEMANDE_CREEE)
-                                .orElseThrow(() -> new IllegalArgumentException("Statut demande Créée introuvable")));
-                demandeParent.setDateDemande(wizard.getDateDemande());
-                demandeParent.setDemandeParent(null);
-                Demande savedDemandeParent = demandeService.save(demandeParent);
+                // 3. CARTE RÉSIDENTE ORIGINALE
+                CarteResident carteOriginale = carteResidentService.findByReference(wizard.getReferenceCarteOriginale())
+                                .map(c -> {
+                                        if (!c.getDemande().getDemandeur().getId().equals(demandeur.getId())) {
+                                                throw new IllegalArgumentException(
+                                                                "La carte résidente originale n'appartient pas à ce demandeur.");
+                                        }
+                                        return c;
+                                })
+                                .orElseGet(() -> {
+                                        // SI ABSENTE : la carte vient peut-être de l'ancien système
+                                        if (wizard.getDateDebutCarteOriginale() == null
+                                                        || wizard.getDateFinCarteOriginale() == null) {
+                                                throw new IllegalArgumentException(
+                                                                "La carte originale est introuvable. Veuillez saisir ses dates (début et fin) car elle provient probablement de l'ancien système.");
+                                        }
+
+                                        CarteResident newCarte = new CarteResident();
+                                        newCarte.setReference(wizard.getReferenceCarteOriginale());
+                                        newCarte.setDateDebut(wizard.getDateDebutCarteOriginale());
+                                        newCarte.setDateFin(wizard.getDateFinCarteOriginale());
+                                        newCarte.setDemande(savedDemandeParent); // On la lie à la demande parent
+                                                                                 // actuelle
+                                        newCarte.setPasseport(passeport);
+                                        return carteResidentService.save(newCarte);
+                                });
 
                 // 7. DEMANDE ENFANT (Type Duplicata = 3)
                 Demande demandeEnfant = new Demande();
