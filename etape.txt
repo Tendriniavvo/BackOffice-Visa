@@ -196,3 +196,73 @@ DUPLICATA CARTE RÉSIDENT
 [HISTORIQUE]
   → Enregistrer statut Créée (code 1) pour la demande PARENT
   → Enregistrer statut Créée (code 1) pour la demande ENFANT
+
+
+
+
+
+
+  faites comma ca l'affichage 
+Nouvelle demande — Transfert VISA
+
+Transfert d'un visa d'un ancien passeport vers un nouveau passeport. Les champs marqués * sont obligatoires.
+
+1
+Passeports
+Ancien passeport
+Numéro *
+FR-2024-00123
+Rechercher
+Non trouvé — remplir les infos
+Passeport non trouvé — saisir manuellement
+Date de délivrance *
+
+jj/mm/aaaa
+Date d'expiration *
+
+jj/mm/aaaa
+Pays de délivrance *
+France
+Informations du demandeur — à saisir
+Nom *
+Rakoto
+Prénom *
+Jean
+Date de naissance *
+
+jj/mm/aaaa
+Nationalité *
+
+Français
+Téléphone *
+034...
+Email *
+email@mail.com
+→
+Nouveau passeport
+Numéro *
+FR-2026-00789
+Rechercher
+Trouvé — statut actif
+Date de délivrance
+
+01/01/2026
+Chargée automatiquement
+Date d'expiration
+
+01/01/2036
+Chargée automatiquement
+Pays de délivrance
+France
+Chargée automatiquement
+L'ancien passeport reste dans la base de données — il n'est pas supprimé.
+
+2
+Type de visa
+Type de visa *
+
+Investisseur
+3
+Pièces justificatives
+
+si on ne troive pas le passport ,, on affiche les champ a saisir pour les info
