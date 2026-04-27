@@ -1,0 +1,103 @@
+DEMANDE NOUVEAU TITRE
+[DEMANDEUR]
+  → Vérifier si le demandeur existe déjà dans la base
+  → Si non : créer le demandeur (nom, prénom, date naissance, contact...)
+       ↓
+[PASSEPORT]
+  → Enregistrer le passeport du demandeur
+  → Statut initial = Actif (code 1)
+       ↓
+[VISA TRANSFORMABLE]
+  → Enregistrer le visa transformable lié au demandeur et au passeport
+  → (c'est le visa d'entrée qu'on va transformer en carte résident)
+       ↓
+[DEMANDE]
+  → Créer la demande
+  → id_type_demande = 1 (Nouveau titre)
+  → id_statut = 1 (Créée)
+  → id_demande_parent = NULL (pas de parent)
+       ↓
+[PIÈCES JUSTIFICATIVES]
+  → Attacher les pièces requises selon le type de visa
+  → est_fourni = FALSE par défaut (le demandeur les fournira après)
+       ↓
+[HISTORIQUE]
+  → Enregistrer le statut initial = Créée (code 1)
+
+
+
+
+TRANSFERT VISA
+[NOUVEAU PASSEPORT]
+  → Le demandeur existe déjà dans la base
+  → Enregistrer son nouveau passeport
+  → Statut = Actif (code 1)
+  → L'ancien passeport reste dans la base (on ne le supprime pas)
+       ↓
+[DEMANDE PARENT]
+  → Créer une demande de type Nouveau titre (type = 1)
+  → id_statut = 1 (Créée)
+  → id_demande_parent = NULL
+  → Cette demande représente la base administrative du dossier
+       ↓
+[DEMANDE ENFANT]
+  → Créer une demande de type Transfert VISA (type = 2)
+  → id_statut = 1 (Créée)
+  → id_demande_parent = ID de la demande parent créée juste avant
+  → Cette demande porte la logique du transfert
+       ↓
+[DEMANDE_TRANSFERT]
+  → Lier la demande enfant à :
+       • id_ancien_passeport → l'ancien passeport
+       • id_nouveau_passeport → le nouveau passeport
+  → C'est ici qu'on sait d'où vers où le visa est transféré
+       ↓
+[PIÈCES JUSTIFICATIVES]
+  → Attacher les pièces requises pour le transfert
+  → sur la demande ENFANT
+       ↓
+[HISTORIQUE]
+  → Enregistrer statut Créée (code 1) pour la demande PARENT
+  → Enregistrer statut Créée (code 1) pour la demande ENFANT
+
+
+
+
+
+DUPLICATA CARTE RÉSIDENT
+[MISE À JOUR PASSEPORT]
+  → Le demandeur et son passeport existent déjà
+  → Mettre à jour le statut du passeport
+       • Perdu → code 21
+       • Volé  → code 31
+       ↓
+[HISTORIQUE PASSEPORT]
+  → Enregistrer ce changement de statut dans Historique_Statut_Passeport
+  → Pour garder la traçabilité
+       ↓
+[DEMANDE PARENT]
+  → Créer une demande de type Nouveau titre (type = 1)
+  → id_statut = 1 (Créée)
+  → id_demande_parent = NULL
+  → id_visa_transformable = NULL (pas de visa transformable ici)
+  → Cette demande représente la base administrative du dossier
+       ↓
+[DEMANDE ENFANT]
+  → Créer une demande de type Duplicata (type = 3)
+  → id_statut = 1 (Créée)
+  → id_demande_parent = ID de la demande parent créée juste avant
+  → id_visa_transformable = NULL
+       ↓
+[DEMANDE_DUPLICATA]
+  → Lier la demande enfant à :
+       • id_carte_originale → la carte résidente perdue/volée
+       • motif → 'Perdu' ou 'Volé' ou 'Détérioré'
+  → C'est ici qu'on sait quelle carte on est en train de refaire
+       ↓
+[PIÈCES JUSTIFICATIVES]
+  → Attacher les pièces requises pour le duplicata
+  → sur la demande ENFANT
+       ↓
+[HISTORIQUE]
+  → Enregistrer statut Créée (code 1) pour la demande PARENT
+  → Enregistrer statut Créée (code 1) pour la demande ENFANT
