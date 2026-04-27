@@ -1,5 +1,6 @@
 package com.example.BackOffice_Visa.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +26,13 @@ public class DemandeurService {
 
     public Optional<Demandeur> findById(Integer id) {
         return demandeurRepository.findById(id);
+    }
+
+    public Optional<Demandeur> findByIdentity(String nom, String prenom, LocalDate dateNaissance) {
+        return demandeurRepository.findFirstByNomIgnoreCaseAndPrenomIgnoreCaseAndDateNaissance(
+                nom,
+                prenom,
+                dateNaissance);
     }
 
     @Transactional
