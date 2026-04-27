@@ -130,20 +130,47 @@
                         </div>
                     </section>
 
-                    <section class="detail-card">
+                    <section class="detail-card" id="duplicataSection" style="${wizard.idTypeDemande == 3 ? 'display: block;' : 'display: none;'}">
+                        <h4>Détails Duplicata</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="referenceCarteOriginale">Référence carte résidente originale</label>
+                                <input id="referenceCarteOriginale" name="referenceCarteOriginale" type="text" value="${wizard.referenceCarteOriginale}">
+                            </div>
+                            <div class="form-group">
+                                <label for="motifDuplicata">Motif du duplicata</label>
+                                <select id="motifDuplicata" name="motifDuplicata">
+                                    <option value="">Choisir un motif...</option>
+                                    <option value="Perdu" ${wizard.motifDuplicata == 'Perdu' ? 'selected' : ''}>Perdu</option>
+                                    <option value="Volé" ${wizard.motifDuplicata == 'Volé' ? 'selected' : ''}>Volé</option>
+                                    <option value="Détérioré" ${wizard.motifDuplicata == 'Détérioré' ? 'selected' : ''}>Détérioré</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="dateDebutCarteOriginale">Date début carte originale (si ancien système)</label>
+                                <input id="dateDebutCarteOriginale" name="dateDebutCarteOriginale" type="date" value="${wizard.dateDebutCarteOriginale}">
+                            </div>
+                            <div class="form-group">
+                                <label for="dateFinCarteOriginale">Date fin carte originale (si ancien système)</label>
+                                <input id="dateFinCarteOriginale" name="dateFinCarteOriginale" type="date" value="${wizard.dateFinCarteOriginale}">
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="detail-card" id="visaTransformableSection" style="${wizard.idTypeDemande == 3 ? 'display: none;' : 'display: block;'}">
                         <h4>Visa transformable</h4>
                         <div class="form-grid">
                             <div class="form-group form-group-full">
                                 <label for="numeroReferenceVisaTransformable">Référence visa transformable</label>
-                                <input id="numeroReferenceVisaTransformable" name="numeroReferenceVisaTransformable" type="text" value="${wizard.numeroReferenceVisaTransformable}" required>
+                                <input id="numeroReferenceVisaTransformable" name="numeroReferenceVisaTransformable" type="text" value="${wizard.numeroReferenceVisaTransformable}" ${wizard.idTypeDemande == 3 ? '' : 'required'}>
                             </div>
                             <div class="form-group">
                                 <label for="dateDebutVisaTransformable">Date début visa transformable</label>
-                                <input id="dateDebutVisaTransformable" name="dateDebutVisaTransformable" type="date" value="${wizard.dateDebutVisaTransformable}" required>
+                                <input id="dateDebutVisaTransformable" name="dateDebutVisaTransformable" type="date" value="${wizard.dateDebutVisaTransformable}" ${wizard.idTypeDemande == 3 ? '' : 'required'}>
                             </div>
                             <div class="form-group">
                                 <label for="dateExpirationVisaTransformable">Date expiration visa transformable</label>
-                                <input id="dateExpirationVisaTransformable" name="dateExpirationVisaTransformable" type="date" value="${wizard.dateExpirationVisaTransformable}" required>
+                                <input id="dateExpirationVisaTransformable" name="dateExpirationVisaTransformable" type="date" value="${wizard.dateExpirationVisaTransformable}" ${wizard.idTypeDemande == 3 ? '' : 'required'}>
                             </div>
                         </div>
                     </section>
@@ -244,10 +271,17 @@
     function toggleAncienPasseport() {
         const typeDemandeSelect = document.getElementById('idTypeDemande');
         const ancienPasseportGroup = document.getElementById('ancienPasseportGroup');
+        const duplicataSection = document.getElementById('duplicataSection');
+        const visaTransformableSection = document.getElementById('visaTransformableSection');
         const inputAncien = document.getElementById('numeroAncienPasseport');
         const labelNouveau = document.querySelector('label[for="numeroPasseport"]');
+        const refCarte = document.getElementById('referenceCarteOriginale');
+        const motifDup = document.getElementById('motifDuplicata');
+        const refVisa = document.getElementById('numeroReferenceVisaTransformable');
+        const dateDebutVisa = document.getElementById('dateDebutVisaTransformable');
+        const dateFinVisa = document.getElementById('dateExpirationVisaTransformable');
 
-        if (typeDemandeSelect && ancienPasseportGroup && labelNouveau) {
+        if (typeDemandeSelect && ancienPasseportGroup && labelNouveau && duplicataSection && visaTransformableSection) {
             // L'ID 2 correspond au Transfert VISA
             if (typeDemandeSelect.value == "2") {
                 ancienPasseportGroup.style.display = 'flex';
@@ -255,6 +289,27 @@
                     inputAncien.required = true;
                 }
                 labelNouveau.textContent = "Numéro nouveau passeport";
+                duplicataSection.style.display = 'none';
+                visaTransformableSection.style.display = 'block';
+                if (refCarte) refCarte.required = false;
+                if (motifDup) motifDup.required = false;
+                if (refVisa) refVisa.required = true;
+                if (dateDebutVisa) dateDebutVisa.required = true;
+                if (dateFinVisa) dateFinVisa.required = true;
+            } else if (typeDemandeSelect.value == "3") { // Duplicata
+                ancienPasseportGroup.style.display = 'none';
+                if (inputAncien) {
+                    inputAncien.required = false;
+                    inputAncien.value = "";
+                }
+                labelNouveau.textContent = "Numéro passeport";
+                duplicataSection.style.display = 'block';
+                visaTransformableSection.style.display = 'none';
+                if (refCarte) refCarte.required = true;
+                if (motifDup) motifDup.required = true;
+                if (refVisa) refVisa.required = false;
+                if (dateDebutVisa) dateDebutVisa.required = false;
+                if (dateFinVisa) dateFinVisa.required = false;
             } else {
                 ancienPasseportGroup.style.display = 'none';
                 if (inputAncien) {
@@ -262,6 +317,13 @@
                     inputAncien.value = "";
                 }
                 labelNouveau.textContent = "Numéro passeport";
+                duplicataSection.style.display = 'none';
+                visaTransformableSection.style.display = 'block';
+                if (refCarte) refCarte.required = false;
+                if (motifDup) motifDup.required = false;
+                if (refVisa) refVisa.required = true;
+                if (dateDebutVisa) dateDebutVisa.required = true;
+                if (dateFinVisa) dateFinVisa.required = true;
             }
         }
     }

@@ -19,6 +19,8 @@ public class DemandeWizardData {
     private String numeroAncienPasseport;
     private String referenceCarteOriginale;
     private String motifDuplicata;
+    private LocalDate dateDebutCarteOriginale;
+    private LocalDate dateFinCarteOriginale;
     private LocalDate dateDelivrance;
     private LocalDate dateExpiration;
     private String paysDelivrance;
@@ -133,6 +135,22 @@ public class DemandeWizardData {
 
     public void setMotifDuplicata(String motifDuplicata) {
         this.motifDuplicata = motifDuplicata;
+    }
+
+    public LocalDate getDateDebutCarteOriginale() {
+        return dateDebutCarteOriginale;
+    }
+
+    public void setDateDebutCarteOriginale(LocalDate dateDebutCarteOriginale) {
+        this.dateDebutCarteOriginale = dateDebutCarteOriginale;
+    }
+
+    public LocalDate getDateFinCarteOriginale() {
+        return dateFinCarteOriginale;
+    }
+
+    public void setDateFinCarteOriginale(LocalDate dateFinCarteOriginale) {
+        this.dateFinCarteOriginale = dateFinCarteOriginale;
     }
 
     public LocalDate getDateDelivrance() {

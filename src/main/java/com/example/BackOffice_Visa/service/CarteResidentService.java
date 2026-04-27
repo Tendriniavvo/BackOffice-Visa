@@ -27,6 +27,10 @@ public class CarteResidentService {
         return carteResidentRepository.findById(id);
     }
 
+    public Optional<CarteResident> findByReference(String reference) {
+        return carteResidentRepository.findByReference(reference);
+    }
+
     @Transactional
     public CarteResident save(CarteResident carteResident) {
         return carteResidentRepository.save(carteResident);

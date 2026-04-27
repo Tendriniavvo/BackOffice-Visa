@@ -111,26 +111,37 @@ DUPLICATA CARTE RÉSIDENT
        • SI TROUVÉ  → récupérer son ID
        • SI ABSENT  → créer le passeport et récupérer son ID
                     → statut initial = Actif (code 1)
+                    → enregistrer dans Historique_Statut_Passeport
        ↓
 [CARTE RÉSIDENTE ORIGINALE]
   → Saisir la référence de la carte résidente perdue/volée
   → Chercher dans la base par reference
        • SI TROUVÉE → récupérer son ID
                     → vérifier qu'elle appartient bien à ce demandeur
-       • SI ABSENTE → bloquer et alerter
-                    → impossible de faire un duplicata sans carte originale
+       • SI ABSENTE → la carte vient peut-être de l'ancien système
+                    → saisir manuellement les informations de la carte
+                         • reference
+                         • date_debut
+                         • date_fin
+                         • id_passeport (récupéré ou créé juste avant)
+                    → créer la carte dans carte_resident
+                    → récupérer son ID
+                    → continuer normalement
        ↓
 [MISE À JOUR PASSEPORT]
   → Saisir le motif : Perdu / Volé / Détérioré
-  → Mettre à jour le statut du passeport selon le motif
-       • Perdu      → code 21
-       • Volé       → code 31
-       • Détérioré  → garder Actif (code 1), pas de changement statut
-       ↓
-[HISTORIQUE PASSEPORT]
-  → Enregistrer ce changement de statut dans Historique_Statut_Passeport
-  → Pour garder la traçabilité
-  → (uniquement si Perdu ou Volé)
+
+  TABLE : Passeport
+    → UPDATE id_statut_actuel
+         • Perdu      → code 21
+         • Volé       → code 31
+         • Détérioré  → pas de UPDATE (statut reste Actif = 1)
+
+  TABLE : Historique_Statut_Passeport
+    → INSERT du nouveau statut
+         • Perdu      → enregistrer code 21
+         • Volé       → enregistrer code 31
+         • Détérioré  → pas d'INSERT
        ↓
 [DEMANDE PARENT]
   → Créer une demande de type Nouveau titre (type = 1)
@@ -147,7 +158,7 @@ DUPLICATA CARTE RÉSIDENT
        ↓
 [DEMANDE_DUPLICATA]
   → Lier la demande enfant à :
-       • id_carte_originale → ID récupéré depuis la recherche
+       • id_carte_originale → ID récupéré ou créé (ancien système)
        • motif → 'Perdu' ou 'Volé' ou 'Détérioré'
   → C'est ici qu'on sait quelle carte on est en train de refaire
        ↓
