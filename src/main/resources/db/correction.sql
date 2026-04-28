@@ -50,7 +50,7 @@ CREATE TABLE Ref_Statut_Demande (
 
 INSERT INTO Ref_Statut_Demande (code, libelle) VALUES 
 (1,  'Créée'),
-(11, 'En attente'),
+(11, 'Scan terminé'),
 (21, 'En cours de traitement'),
 (31, 'Validée'),
 (41, 'Rejetée');
