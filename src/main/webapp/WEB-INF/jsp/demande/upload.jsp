@@ -56,6 +56,7 @@
                         <p class="content-text">Aucune pièce n'est associée à cette demande.</p>
                     </c:when>
                     <c:otherwise>
+                        <form action="/demandes/${demande.id}/upload" method="post" enctype="multipart/form-data" style="margin: 0;">
                         <div class="table-wrap">
                             <table>
                                 <thead>
@@ -80,17 +81,18 @@
                                         </td>
                                         <td>${dp.fichier != null ? dp.fichier : '-'}</td>
                                         <td>
-                                            <form action="/demandes/${demande.id}/upload" method="post" enctype="multipart/form-data" style="display:flex; gap: 8px; align-items:center; flex-wrap: wrap;">
-                                                <input type="hidden" name="pieceId" value="${dp.piece != null ? dp.piece.id : ''}">
-                                                <input type="file" name="file" required>
-                                                <button type="submit" class="btn-primary">Uploader</button>
-                                            </form>
+                                            <input class="file-input" type="file" name="file_${dp.piece != null ? dp.piece.id : ''}">
                                         </td>
                                     </tr>
                                 </c:forEach>
                                 </tbody>
                             </table>
                         </div>
+                        <div style="display:flex; gap: 12px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap;">
+                            <button type="submit" class="btn-primary">Uploader</button>
+                            <button type="submit" class="btn-primary" formmethod="post" formaction="/demandes/${demande.id}/scanner">Scanner</button>
+                        </div>
+                        </form>
                     </c:otherwise>
                 </c:choose>
             </div>

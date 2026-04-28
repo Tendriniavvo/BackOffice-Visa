@@ -72,6 +72,7 @@ public class DemandeController {
         private static final int TYPE_DEMANDE_TRANSFERT = 2;
         private static final int TYPE_DEMANDE_DUPLICATA = 3;
         private static final int STATUT_DEMANDE_CREEE = 1;
+        private static final int STATUT_DEMANDE_SCAN_TERMINE = 11;
         private static final int STATUT_DEMANDE_VALIDEE = 31;
         private static final int STATUT_PASSEPORT_ACTIF = 1;
         private static final int STATUT_PASSEPORT_PERDU = 21;
@@ -173,10 +174,9 @@ public class DemandeController {
         }
 
         @PostMapping("/demandes/{id}/upload")
-        public String uploadPiece(
+        public String uploadPieces(
                         @PathVariable("id") Integer id,
-                        @RequestParam("pieceId") Integer pieceId,
-                        @RequestParam("file") MultipartFile file,
+                        @RequestParam Map<String, MultipartFile> files,
                         RedirectAttributes redirectAttributes) {
                 Optional<Demande> demandeOpt = demandeService.findById(id);
                 if (demandeOpt.isEmpty()) {
@@ -191,37 +191,110 @@ public class DemandeController {
                         return "redirect:/demandes";
                 }
 
-                if (pieceId == null || file == null || file.isEmpty()) {
-                        redirectAttributes.addFlashAttribute("errorMessage", "Veuillez sélectionner un fichier.");
+                if (files == null || files.isEmpty()) {
+                        redirectAttributes.addFlashAttribute("errorMessage", "Veuillez sélectionner au moins un fichier.");
                         return "redirect:/demandes/" + id + "/upload";
                 }
 
-                DemandePiece dp = demandePieceService.findByDemandeIdAndPieceId(id, pieceId)
-                                .orElseThrow(() -> new IllegalArgumentException("Pièce introuvable pour cette demande."));
-
                 Path dir = Paths.get("uploads", "demande-" + id);
+                int uploadedCount = 0;
                 try {
                         Files.createDirectories(dir);
 
-                        String original = StringUtils.cleanPath(file.getOriginalFilename() == null ? "file" : file.getOriginalFilename());
-                        String filename = pieceId + "_" + System.currentTimeMillis() + "_" + original;
-                        Path target = dir.resolve(filename);
+                        for (Map.Entry<String, MultipartFile> entry : files.entrySet()) {
+                                String key = entry.getKey();
+                                MultipartFile file = entry.getValue();
+                                if (file == null || file.isEmpty()) {
+                                        continue;
+                                }
 
-                        try (InputStream in = file.getInputStream()) {
-                                Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+                                if (!key.startsWith("file_")) {
+                                        continue;
+                                }
+                                String pieceIdStr = key.substring("file_".length());
+                                Integer pieceId;
+                                try {
+                                        pieceId = Integer.valueOf(pieceIdStr);
+                                } catch (NumberFormatException e) {
+                                        continue;
+                                }
+
+                                DemandePiece dp = demandePieceService.findByDemandeIdAndPieceId(id, pieceId)
+                                                .orElseThrow(() -> new IllegalArgumentException(
+                                                                "Pièce introuvable pour cette demande (pieceId=" + pieceId + ")."));
+
+                                String original = StringUtils.cleanPath(
+                                                file.getOriginalFilename() == null ? "file" : file.getOriginalFilename());
+                                String filename = pieceId + "_" + System.currentTimeMillis() + "_" + original;
+                                Path target = dir.resolve(filename);
+
+                                try (InputStream in = file.getInputStream()) {
+                                        Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+                                }
+
+                                dp.setFichier(target.toString());
+                                dp.setEstFourni(true);
+                                dp.setDateUpload(LocalDateTime.now());
+                                demandePieceService.save(dp);
+                                uploadedCount++;
                         }
 
-                        dp.setFichier(target.toString());
-                        dp.setEstFourni(true);
-                        dp.setDateUpload(LocalDateTime.now());
-                        demandePieceService.save(dp);
-
-                        redirectAttributes.addFlashAttribute("successMessage", "Fichier uploadé avec succès.");
+                        if (uploadedCount == 0) {
+                                redirectAttributes.addFlashAttribute("errorMessage", "Aucun fichier n'a été uploadé.");
+                        } else {
+                                redirectAttributes.addFlashAttribute("successMessage",
+                                                uploadedCount + " fichier(s) uploadé(s) avec succès.");
+                        }
                         return "redirect:/demandes/" + id + "/upload";
                 } catch (IOException e) {
                         redirectAttributes.addFlashAttribute("errorMessage", "Erreur lors de l'upload du fichier.");
                         return "redirect:/demandes/" + id + "/upload";
                 }
+        }
+
+        @Transactional
+        @PostMapping("/demandes/{id}/scanner")
+        public String scannerDossier(
+                        @PathVariable("id") Integer id,
+                        RedirectAttributes redirectAttributes) {
+                Optional<Demande> demandeOpt = demandeService.findById(id);
+                if (demandeOpt.isEmpty()) {
+                        redirectAttributes.addFlashAttribute("errorMessage", "Demande introuvable.");
+                        return "redirect:/demandes";
+                }
+
+                Demande demande = demandeOpt.get();
+                if (demande.getStatut() == null || demande.getStatut().getCode() != STATUT_DEMANDE_CREEE) {
+                        redirectAttributes.addFlashAttribute("errorMessage",
+                                        "Action non autorisée: la demande n'est pas au statut Créée.");
+                        return "redirect:/demandes";
+                }
+
+                List<DemandePiece> pieces = demandePieceService.findByDemandeId(id);
+                List<String> manquantes = pieces.stream()
+                                .filter(dp -> dp.getPiece() != null && Boolean.TRUE.equals(dp.getPiece().getObligatoire()))
+                                .filter(dp -> !Boolean.TRUE.equals(dp.getEstFourni()))
+                                .map(dp -> dp.getPiece().getLibelle())
+                                .toList();
+
+                if (!manquantes.isEmpty()) {
+                        redirectAttributes.addFlashAttribute("errorMessage",
+                                        "Scan impossible: pièces obligatoires manquantes: " + String.join(", ", manquantes));
+                        return "redirect:/demandes/" + id + "/upload";
+                }
+
+                demande.setStatut(refStatutDemandeService.findById(STATUT_DEMANDE_SCAN_TERMINE)
+                                .orElseThrow(() -> new IllegalArgumentException("Statut Scan terminé introuvable")));
+                Demande saved = demandeService.save(demande);
+
+                HistoriqueStatutDemande hist = new HistoriqueStatutDemande();
+                hist.setDemande(saved);
+                hist.setStatut(saved.getStatut());
+                hist.setDateChangement(LocalDateTime.now());
+                historiqueStatutDemandeService.save(hist);
+
+                redirectAttributes.addFlashAttribute("successMessage", "Scan terminé.");
+                return "redirect:/demandes/" + id + "/upload";
         }
 
         @GetMapping("/demandes/nouveau")

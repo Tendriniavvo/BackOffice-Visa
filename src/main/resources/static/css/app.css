@@ -340,6 +340,63 @@ svg.donut { width:140px; height:140px; }
 .btn-primary:hover { background:var(--accent-hover); transform:translateY(-1px); box-shadow:0 4px 12px rgba(59,130,246,0.3); }
 .btn-primary:active { transform:translateY(0); box-shadow:var(--shadow-xs); }
 
+.btn-secondary {
+  padding:8px var(--sp-5);
+  border-radius:var(--radius-sm);
+  background:var(--bg-surface);
+  border:1px solid var(--border-default);
+  color:var(--text-primary);
+  font-family:var(--font-sans);
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  letter-spacing:0.1px;
+  transition:all var(--duration) var(--ease);
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  gap:var(--sp-2);
+}
+.btn-secondary:hover {
+  background:var(--bg-surface-hover);
+  border-color:var(--text-tertiary);
+  transform:translateY(-1px);
+  box-shadow:var(--shadow-sm);
+}
+.btn-secondary:active { transform:translateY(0); box-shadow:var(--shadow-xs); }
+
+input[type="file"].file-input {
+  width:100%;
+  padding:8px 10px;
+  border:1px solid var(--border-default);
+  border-radius:var(--radius-sm);
+  background:var(--bg-surface);
+  color:var(--text-secondary);
+  font-family:var(--font-sans);
+  font-size:12.5px;
+  transition:border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+}
+input[type="file"].file-input:focus {
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-subtle);
+}
+input[type="file"].file-input::file-selector-button {
+  margin-right:10px;
+  padding:8px 12px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--border-default);
+  background:var(--bg-subtle);
+  color:var(--text-primary);
+  font-weight:600;
+  cursor:pointer;
+  transition:all var(--duration) var(--ease);
+}
+input[type="file"].file-input::file-selector-button:hover {
+  background:var(--bg-surface-hover);
+  border-color:var(--text-tertiary);
+}
+
 /* ══════════════ THEME TOGGLE ══════════════ */
 .theme-toggle {
   width:36px; height:36px; border-radius:var(--radius-sm); background:var(--bg-subtle);
