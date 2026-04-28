@@ -117,7 +117,7 @@
                         </div>
                     </section>
 
-                    <section class="detail-card">
+                    <section class="detail-card" id="passeportSection">
                         <h4>Passeport</h4>
                         <div class="form-grid">
                             <!-- Groupe Ancien Passeport (uniquement pour Transfert) -->
@@ -190,7 +190,14 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="referenceCarteOriginale">Référence carte résidente originale</label>
-                                <input id="referenceCarteOriginale" name="referenceCarteOriginale" type="text" value="${wizard.referenceCarteOriginale}">
+                                <div style="display: flex; gap: 8px;">
+                                    <input id="referenceCarteOriginale" name="referenceCarteOriginale" type="text" value="${wizard.referenceCarteOriginale}" style="flex: 1;">
+                                    <button type="button" class="btn-primary" onclick="searchCarteResident()" style="width: auto; white-space: nowrap;">Rechercher</button>
+                                </div>
+                                <span id="searchCarteResidentStatus" style="font-size: 0.85rem; margin-top: 4px; display: block;"></span>
+                                <span id="carteResidentManualHint" style="font-size: 0.85rem; margin-top: 4px; display: none; color: var(--text-secondary);">
+                                    Carte non trouvée — saisir manuellement
+                                </span>
                             </div>
                             <div class="form-group">
                                 <label for="motifDuplicata">Motif du duplicata</label>
@@ -201,15 +208,22 @@
                                     <option value="Détérioré" ${wizard.motifDuplicata == 'Détérioré' ? 'selected' : ''}>Détérioré</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label for="dateDebutCarteOriginale">Date début carte originale (si ancien système)</label>
-                                <input id="dateDebutCarteOriginale" name="dateDebutCarteOriginale" type="date" value="${wizard.dateDebutCarteOriginale}">
-                            </div>
-                            <div class="form-group">
-                                <label for="dateFinCarteOriginale">Date fin carte originale (si ancien système)</label>
-                                <input id="dateFinCarteOriginale" name="dateFinCarteOriginale" type="date" value="${wizard.dateFinCarteOriginale}">
+                            <div id="carteResidentManualFields" class="form-group-full" style="display: none;">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="dateDebutCarteOriginale">Date début carte originale (si ancien système)</label>
+                                        <input id="dateDebutCarteOriginale" name="dateDebutCarteOriginale" type="date" value="${wizard.dateDebutCarteOriginale}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dateFinCarteOriginale">Date fin carte originale (si ancien système)</label>
+                                        <input id="dateFinCarteOriginale" name="dateFinCarteOriginale" type="date" value="${wizard.dateFinCarteOriginale}">
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        <p id="duplicataInfoNote" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 12px; display: none;">
+                            Si la carte est trouvée, toutes les informations (demandeur, passeport) sont chargées automatiquement.
+                        </p>
                     </section>
 
                     <section class="detail-card" id="visaTransformableSection" style="${wizard.idTypeDemande == 3 ? 'display: none;' : 'display: block;'}">
@@ -355,6 +369,148 @@
         } catch (error) {
             status.textContent = "Erreur lors de la recherche";
             status.style.color = "var(--red)";
+        }
+    }
+
+    async function searchCarteResident() {
+        const reference = document.getElementById('referenceCarteOriginale')?.value;
+        const status = document.getElementById('searchCarteResidentStatus');
+        const manualHint = document.getElementById('carteResidentManualHint');
+        const manualFields = document.getElementById('carteResidentManualFields');
+        const infoNote = document.getElementById('duplicataInfoNote');
+        const passeportSection = document.getElementById('passeportSection');
+        const demandeurSection = document.getElementById('demandeurSection');
+        if (!reference) return;
+
+        if (status) {
+            status.textContent = "Recherche en cours...";
+            status.style.color = "var(--text-secondary)";
+        }
+        if (manualHint) manualHint.style.display = 'none';
+        if (infoNote) infoNote.style.display = 'none';
+
+        try {
+            const response = await fetch("/api/search/carteResident?reference=" + encodeURIComponent(reference));
+            const data = await response.json();
+
+            const demandeurFields = ['nom', 'prenom', 'dateNaissance', 'lieuNaissance', 'telephone', 'email', 'adresse', 'idSituationFamiliale', 'idNationalite'];
+            const passeportFields = ['numeroPasseport', 'dateDelivrance', 'dateExpiration', 'paysDelivrance'];
+
+            if (response.ok && data.found) {
+                if (status) {
+                    status.textContent = "Trouvée — informations chargées automatiquement";
+                    status.style.color = "var(--green)";
+                }
+                if (manualHint) manualHint.style.display = 'none';
+                if (manualFields) manualFields.style.display = 'none';
+                if (infoNote) infoNote.style.display = 'block';
+                if (passeportSection) passeportSection.style.display = 'block';
+                if (demandeurSection) demandeurSection.style.display = 'block';
+
+                const dateDebutCarte = document.getElementById('dateDebutCarteOriginale');
+                const dateFinCarte = document.getElementById('dateFinCarteOriginale');
+                if (dateDebutCarte) {
+                    dateDebutCarte.required = false;
+                    dateDebutCarte.value = data.dateDebut || '';
+                    dateDebutCarte.readOnly = true;
+                }
+                if (dateFinCarte) {
+                    dateFinCarte.required = false;
+                    dateFinCarte.value = data.dateFin || '';
+                    dateFinCarte.readOnly = true;
+                }
+
+                passeportFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        const v = data.passeport ? data.passeport[id] : '';
+                        el.value = v ?? '';
+                        el.classList.add('field-found');
+                        el.readOnly = true;
+                        el.required = true;
+                    }
+                });
+
+                const demandeurStatus = document.getElementById('searchDemandeurStatus');
+                if (demandeurStatus) {
+                    demandeurStatus.textContent = "Trouvé — informations chargées automatiquement";
+                    demandeurStatus.style.color = "var(--green)";
+                }
+                const note = document.getElementById('demandeurNote');
+                if (note) note.style.display = 'block';
+                demandeurFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        const v = data.demandeur ? data.demandeur[id] : '';
+                        el.value = v ?? '';
+                        el.classList.add('field-found');
+                        el.readOnly = true;
+                        el.required = true;
+                        if (el.tagName === 'SELECT') {
+                            el.style.pointerEvents = 'none';
+                            el.style.backgroundColor = 'var(--bg-secondary)';
+                        }
+                    }
+                });
+            } else {
+                if (status) {
+                    status.textContent = "Non trouvée — carte venant de l'ancien système";
+                    status.style.color = "var(--red)";
+                }
+                if (manualHint) manualHint.style.display = 'block';
+                if (manualFields) manualFields.style.display = 'block';
+                if (infoNote) infoNote.style.display = 'none';
+                if (passeportSection) passeportSection.style.display = 'block';
+                if (demandeurSection) demandeurSection.style.display = 'block';
+
+                const dateDebutCarte = document.getElementById('dateDebutCarteOriginale');
+                const dateFinCarte = document.getElementById('dateFinCarteOriginale');
+                if (dateDebutCarte) {
+                    dateDebutCarte.readOnly = false;
+                    dateDebutCarte.required = true;
+                    dateDebutCarte.classList.remove('field-found');
+                }
+                if (dateFinCarte) {
+                    dateFinCarte.readOnly = false;
+                    dateFinCarte.required = true;
+                    dateFinCarte.classList.remove('field-found');
+                }
+
+                passeportFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.remove('field-found');
+                        el.readOnly = false;
+                        el.required = true;
+                    }
+                });
+
+                const demandeurStatus = document.getElementById('searchDemandeurStatus');
+                if (demandeurStatus) {
+                    demandeurStatus.textContent = "Informations du demandeur — à saisir";
+                    demandeurStatus.style.color = "var(--red)";
+                }
+                const note = document.getElementById('demandeurNote');
+                if (note) note.style.display = 'none';
+                demandeurFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.remove('field-found');
+                        el.readOnly = false;
+                        el.required = true;
+                        if (el.tagName === 'SELECT') {
+                            el.style.pointerEvents = 'auto';
+                            el.style.backgroundColor = '';
+                        }
+                    }
+                });
+            }
+        } catch (error) {
+            if (status) {
+                status.textContent = "Erreur lors de la recherche";
+                status.style.color = "var(--red)";
+            }
+            if (manualHint) manualHint.style.display = 'none';
         }
     }
 
@@ -663,6 +819,7 @@
         const nouveauPasseportTitle = document.getElementById('nouveauPasseportTitle');
         const passeportNote = document.getElementById('passeportNote');
         const demandeurSection = document.getElementById('demandeurSection');
+        const passeportSection = document.getElementById('passeportSection');
 
         const fieldsAncien = ['numeroAncienPasseport', 'dateDelivranceAncienPasseport', 'dateExpirationAncienPasseport', 'paysDelivranceAncienPasseport'];
         const fieldsNouveau = ['numeroPasseport', 'dateDelivrance', 'dateExpiration', 'paysDelivrance'];
@@ -702,10 +859,15 @@
                 if (dateFinVisa) dateFinVisa.required = false;
             } else if (typeDemandeSelect.value == "3") { // Duplicata
                 ancienPasseportGroup.style.display = 'none';
-                if (demandeurSection) demandeurSection.style.display = 'block';
+                if (demandeurSection) demandeurSection.style.display = 'none';
+                if (passeportSection) passeportSection.style.display = 'none';
                 demandeurRequiredFields.forEach(id => {
                     const el = document.getElementById(id);
-                    if (el) el.required = true;
+                    if (el) el.required = false;
+                });
+                fieldsNouveau.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.required = false;
                 });
                 fieldsAncien.forEach(id => {
                     const el = document.getElementById(id);
@@ -730,6 +892,7 @@
             } else { // Nouveau Titre
                 ancienPasseportGroup.style.display = 'none';
                 if (demandeurSection) demandeurSection.style.display = 'block';
+                if (passeportSection) passeportSection.style.display = 'block';
                 demandeurRequiredFields.forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.required = true;

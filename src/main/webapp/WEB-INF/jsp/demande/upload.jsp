@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liste des Demandes — VisaTrack</title>
+    <title>Soumettre dossier — VisaTrack</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="/css/app.css">
@@ -20,55 +20,71 @@
 
     <div class="content">
         <div class="page-header">
-            <h2 class="content-title">Liste des demandes</h2>
-            <p class="content-text">Suivi des dossiers créés dans le système.</p>
+            <h2 class="content-title">Soumettre dossier</h2>
+            <p class="content-text">Upload des pièces justificatives pour la demande #${demande.id}.</p>
         </div>
+
+        <div class="card" style="margin-bottom: 16px;">
+            <div class="card-body" style="display:flex; gap: 12px; align-items:center; flex-wrap: wrap;">
+                <a href="/demandes" class="btn-secondary">Retour à la liste</a>
+            </div>
+        </div>
+
+        <c:if test="${not empty errorMessage}">
+            <div class="card" style="border-left: 4px solid var(--red); margin-bottom: 16px;">
+                <div class="card-body">
+                    <strong style="color: var(--red);">${errorMessage}</strong>
+                </div>
+            </div>
+        </c:if>
+
+        <c:if test="${not empty successMessage}">
+            <div class="card" style="border-left: 4px solid var(--green); margin-bottom: 16px;">
+                <div class="card-body">
+                    <strong style="color: var(--green);">${successMessage}</strong>
+                </div>
+            </div>
+        </c:if>
 
         <div class="card">
             <div class="card-header">
-                <span class="card-title">Demandes (${demandes.size()})</span>
-                <a href="/demandes/nouveau" class="btn-primary">Nouvelle demande</a>
+                <span class="card-title">Pièces justificatives</span>
             </div>
             <div class="card-body">
                 <c:choose>
-                    <c:when test="${empty demandes}">
-                        <p class="content-text">Aucune demande enregistrée pour le moment.</p>
+                    <c:when test="${empty demandePieces}">
+                        <p class="content-text">Aucune pièce n'est associée à cette demande.</p>
                     </c:when>
                     <c:otherwise>
                         <div class="table-wrap">
                             <table>
                                 <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Demandeur</th>
-                                    <th>Type visa</th>
-                                    <th>Type demande</th>
-                                    <th>Date demande</th>
+                                    <th>Pièce</th>
+                                    <th>Obligatoire</th>
                                     <th>Statut</th>
-                                    <th>Actions</th>
+                                    <th>Fichier</th>
+                                    <th>Action</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <c:forEach items="${demandes}" var="demande">
+                                <c:forEach items="${demandePieces}" var="dp">
                                     <tr>
-                                        <td><span class="dossier-id">#${demande.id}</span></td>
+                                        <td>${dp.piece != null ? dp.piece.libelle : '-'}</td>
+                                        <td>${dp.piece != null && dp.piece.obligatoire ? 'Oui' : 'Non'}</td>
                                         <td>
-                                            ${demande.demandeur != null ? demande.demandeur.nom : '-'}
-                                            ${demande.demandeur != null ? demande.demandeur.prenom : ''}
-                                        </td>
-                                        <td>${demande.typeVisa != null ? demande.typeVisa.libelle : '-'}</td>
-                                        <td>${demande.typeDemande != null ? demande.typeDemande.libelle : '-'}</td>
-                                        <td>${demande.dateDemande}</td>
-                                        <td>
-                                            <span class="badge review">
+                                            <span class="badge ${dp.estFourni ? 'success' : 'review'}">
                                                 <span class="badge-dot"></span>
-                                                ${demande.statut != null ? demande.statut.libelle : 'N/A'}
+                                                ${dp.estFourni ? 'Fourni' : 'Non fourni'}
                                             </span>
                                         </td>
+                                        <td>${dp.fichier != null ? dp.fichier : '-'}</td>
                                         <td>
-                                            <c:if test="${demande.statut != null && demande.statut.code == 1}">
-                                                <a class="btn-primary" href="/demandes/${demande.id}/upload">Soumettre dossier</a>
-                                            </c:if>
+                                            <form action="/demandes/${demande.id}/upload" method="post" enctype="multipart/form-data" style="display:flex; gap: 8px; align-items:center; flex-wrap: wrap;">
+                                                <input type="hidden" name="pieceId" value="${dp.piece != null ? dp.piece.id : ''}">
+                                                <input type="file" name="file" required>
+                                                <button type="submit" class="btn-primary">Uploader</button>
+                                            </form>
                                         </td>
                                     </tr>
                                 </c:forEach>
