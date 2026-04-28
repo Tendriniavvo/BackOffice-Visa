@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.BackOffice_Visa.entity.Passeport;
 import com.example.BackOffice_Visa.entity.VisaTransformable;
 import com.example.BackOffice_Visa.repository.VisaTransformableRepository;
 
@@ -29,6 +30,10 @@ public class VisaTransformableService {
 
     public Optional<VisaTransformable> findByNumeroReference(String numeroReference) {
         return visaTransformableRepository.findByNumeroReference(numeroReference);
+    }
+
+    public Optional<VisaTransformable> findByPasseport(Passeport passeport) {
+        return visaTransformableRepository.findByPasseport(passeport);
     }
 
     @Transactional

@@ -97,6 +97,15 @@ TRANSFERT VISA
                     → enregistrer dans Historique_Statut_Passeport
   → L'ancien passeport reste dans la base (on ne le supprime pas)
        ↓
+[MISE À JOUR VISA TRANSFORMABLE] (avec données antérieures)
+  → Chercher le visa transformable lié à l'ancien passeport
+  → Mettre à jour le champ id_passeport
+       • id_passeport = ID du nouveau passeport
+  → TABLE : Visa_transformable
+       → UPDATE id_passeport
+         WHERE id_passeport = id_ancien_passeport
+  → Le visa transformable suit maintenant le nouveau passeport
+       ↓
 [DEMANDE_TRANSFERT]
   → Lier la demande (enfant ou unique) à :
        • id_ancien_passeport → ID récupéré ou créé
@@ -111,6 +120,10 @@ TRANSFERT VISA
 [HISTORIQUE]
   → SI passeport trouvé   → enregistrer statut Créée pour la demande unique
   → SI passeport absent   → enregistrer statut Créée pour PARENT + ENFANT
+
+
+
+
 
 DUPLICATA CARTE RÉSIDENT
 [DEMANDEUR]

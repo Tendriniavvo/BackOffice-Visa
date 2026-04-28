@@ -651,6 +651,13 @@ public class DemandeController {
                                 });
 
                 if (ancienPasseportTrouve) {
+                        // MISE À JOUR VISA TRANSFORMABLE : le visa transformable lié à l'ancien passeport suit le nouveau passeport
+                        visaTransformableService.findByPasseport(ancienPasseport)
+                                        .ifPresent(vt -> {
+                                                vt.setPasseport(nouveauPasseport);
+                                                visaTransformableService.save(vt);
+                                        });
+
                         // CAS 1 : ancien passeport trouvé -> UNE SEULE DEMANDE (Transfert), pas de parent
                         Demande demandeUnique = new Demande();
                         demandeUnique.setDemandeur(demandeur);
