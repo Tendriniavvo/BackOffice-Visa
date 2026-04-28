@@ -1,0 +1,79 @@
+maintnenat nou somme sur le duplicata de carte resident  
+voici le dessin d'ecran 
+Nouvelle demande — Duplicata carte résidente
+
+Remplacement d'une carte résidente perdue, volée ou détériorée. Les champs marqués * sont obligatoires.
+
+1
+Carte résidente originale
+Recherche de la carte
+Référence de la carte résidente *
+CR-2024-001
+Rechercher
+Non trouvée — carte venant de l'ancien système
+Carte non trouvée — saisir manuellement
+Date de début *
+
+jj/mm/aaaa
+Date de fin *
+
+jj/mm/aaaa
+Passeport lié à la carte — saisir manuellement
+Numéro de passeport *
+US-2023-00456
+Rechercher
+Non trouvé — remplir les infos
+Date de délivrance *
+
+jj/mm/aaaa
+Date d'expiration *
+
+jj/mm/aaaa
+Pays de délivrance *
+États-Unis
+Informations du demandeur — à saisir
+Nom *
+Randria
+Prénom *
+Marie
+Date de naissance *
+
+jj/mm/aaaa
+Nationalité *
+
+Américaine
+Téléphone *
+034...
+Email *
+email@mail.com
+Adresse *
+Rue des fleurs Toamasina
+Si la carte est trouvée, toutes les informations (demandeur, passeport) sont chargées automatiquement.
+
+2
+Motif du duplicata
+Sélectionner le motif *
+Perdu
+Volé
+Détérioré
+Motif Perdu sélectionné — le statut du passeport sera mis à jour : Actif → Perdu (code 21) et enregistré dans l'historique.
+Si le motif est Détérioré, le statut du passeport ne change pas.
+
+3
+Pièces justificatives
+
+Rechercher la carte résidente
+        ↓
+   Trouvée ?
+   ┌────────┴────────┐
+  OUI                NON (ancien système)
+   ↓                  ↓
+Tout chargé       Saisir manuellement :
+automatiquement   • infos carte
+(demandeur,       • passeport lié
+passeport...)     • infos demandeur
+
+
+NB: in garde toujour le concept si sans donné anterieur , le nouveau titre est tjrs valide et le demende type duplicata est cree
+
+si avec donné anterieur , on creer juste la demande de type duplicata (comme le transfert ) 
