@@ -44,6 +44,7 @@ import com.example.BackOffice_Visa.entity.HistoriqueStatutPasseport;
 import com.example.BackOffice_Visa.entity.Passeport;
 import com.example.BackOffice_Visa.entity.PieceJustificative;
 import com.example.BackOffice_Visa.entity.RefStatutPasseport;
+import com.example.BackOffice_Visa.entity.Visa;
 import com.example.BackOffice_Visa.entity.VisaTransformable;
 import com.example.BackOffice_Visa.model.DemandeWizardData;
 import com.example.BackOffice_Visa.service.CarteResidentService;
@@ -62,6 +63,7 @@ import com.example.BackOffice_Visa.service.RefStatutPasseportService;
 import com.example.BackOffice_Visa.service.SituationFamilialeService;
 import com.example.BackOffice_Visa.service.TypeDemandeService;
 import com.example.BackOffice_Visa.service.TypeVisaService;
+import com.example.BackOffice_Visa.service.VisaService;
 import com.example.BackOffice_Visa.service.VisaTransformableService;
 
 @Controller
@@ -95,6 +97,7 @@ public class DemandeController {
         private final HistoriqueStatutPasseportService historiqueStatutPasseportService;
         private final CarteResidentService carteResidentService;
         private final DemandeDuplicataService demandeDuplicataService;
+        private final VisaService visaService;
 
         public DemandeController(
                         SituationFamilialeService situationFamilialeService,
@@ -113,7 +116,8 @@ public class DemandeController {
                         DemandeTransfertService demandeTransfertService,
                         HistoriqueStatutPasseportService historiqueStatutPasseportService,
                         CarteResidentService carteResidentService,
-                        DemandeDuplicataService demandeDuplicataService) {
+                        DemandeDuplicataService demandeDuplicataService,
+                        VisaService visaService) {
                 this.situationFamilialeService = situationFamilialeService;
                 this.nationaliteService = nationaliteService;
                 this.demandeurService = demandeurService;
@@ -131,6 +135,7 @@ public class DemandeController {
                 this.historiqueStatutPasseportService = historiqueStatutPasseportService;
                 this.carteResidentService = carteResidentService;
                 this.demandeDuplicataService = demandeDuplicataService;
+                this.visaService = visaService;
         }
 
         @ModelAttribute("demandeWizard")
@@ -344,6 +349,12 @@ public class DemandeController {
                         @RequestParam(name = "dateDebutVisaTransformable", required = false) LocalDate dateDebutVisaTransformable,
                         @RequestParam(name = "dateExpirationVisaTransformable", required = false) LocalDate dateExpirationVisaTransformable,
                         @RequestParam(name = "numeroReferenceVisaTransformable", required = false) String numeroReferenceVisaTransformable,
+                        @RequestParam(name = "visaReference", required = false) String visaReference,
+                        @RequestParam(name = "visaDateDebut", required = false) LocalDate visaDateDebut,
+                        @RequestParam(name = "visaDateFin", required = false) LocalDate visaDateFin,
+                        @RequestParam(name = "carteResidentReference", required = false) String carteResidentReference,
+                        @RequestParam(name = "carteResidentDateDebut", required = false) LocalDate carteResidentDateDebut,
+                        @RequestParam(name = "carteResidentDateFin", required = false) LocalDate carteResidentDateFin,
                         @RequestParam("idTypeVisa") Integer idTypeVisa,
                         @RequestParam("idTypeDemande") Integer idTypeDemande,
                         @RequestParam("dateDemande") LocalDate dateDemande,
@@ -375,6 +386,12 @@ public class DemandeController {
                 wizard.setDateDebutVisaTransformable(dateDebutVisaTransformable);
                 wizard.setDateExpirationVisaTransformable(dateExpirationVisaTransformable);
                 wizard.setNumeroReferenceVisaTransformable(numeroReferenceVisaTransformable);
+                wizard.setVisaReference(visaReference);
+                wizard.setVisaDateDebut(visaDateDebut);
+                wizard.setVisaDateFin(visaDateFin);
+                wizard.setCarteResidentReference(carteResidentReference);
+                wizard.setCarteResidentDateDebut(carteResidentDateDebut);
+                wizard.setCarteResidentDateFin(carteResidentDateFin);
                 wizard.setIdTypeVisa(idTypeVisa);
                 wizard.setIdTypeDemande(idTypeDemande);
                 wizard.setDateDemande(dateDemande);
@@ -892,6 +909,28 @@ public class DemandeController {
                 transfert.setAncienPasseport(ancienPasseport);
                 transfert.setNouveauPasseport(nouveauPasseport);
                 demandeTransfertService.save(transfert);
+
+                if (wizard.getVisaDateDebut() == null || wizard.getVisaDateFin() == null
+                                || wizard.getCarteResidentDateDebut() == null || wizard.getCarteResidentDateFin() == null) {
+                        throw new IllegalArgumentException(
+                                        "Veuillez renseigner les informations du visa et de la carte résident (dates début/fin).");
+                }
+
+                Visa visa = new Visa();
+                visa.setDemande(savedDemandeParent);
+                visa.setPasseport(nouveauPasseport);
+                visa.setReference(wizard.getVisaReference());
+                visa.setDateDebut(wizard.getVisaDateDebut());
+                visa.setDateFin(wizard.getVisaDateFin());
+                visaService.save(visa);
+
+                CarteResident carteResident = new CarteResident();
+                carteResident.setDemande(savedDemandeParent);
+                carteResident.setPasseport(nouveauPasseport);
+                carteResident.setReference(wizard.getCarteResidentReference());
+                carteResident.setDateDebut(wizard.getCarteResidentDateDebut());
+                carteResident.setDateFin(wizard.getCarteResidentDateFin());
+                carteResidentService.save(carteResident);
 
                 for (PieceJustificative piece : piecesEligibles) {
                         DemandePiece demandePiece = new DemandePiece();

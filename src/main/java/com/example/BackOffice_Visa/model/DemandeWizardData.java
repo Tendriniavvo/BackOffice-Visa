@@ -31,6 +31,13 @@ public class DemandeWizardData {
     private LocalDate dateExpirationVisaTransformable;
     private String numeroReferenceVisaTransformable;
 
+    private String visaReference;
+    private LocalDate visaDateDebut;
+    private LocalDate visaDateFin;
+    private String carteResidentReference;
+    private LocalDate carteResidentDateDebut;
+    private LocalDate carteResidentDateFin;
+
     private Integer idTypeVisa;
     private Integer idTypeDemande;
     private LocalDate dateDemande;
@@ -226,6 +233,54 @@ public class DemandeWizardData {
 
     public void setNumeroReferenceVisaTransformable(String numeroReferenceVisaTransformable) {
         this.numeroReferenceVisaTransformable = numeroReferenceVisaTransformable;
+    }
+
+    public String getVisaReference() {
+        return visaReference;
+    }
+
+    public void setVisaReference(String visaReference) {
+        this.visaReference = visaReference;
+    }
+
+    public LocalDate getVisaDateDebut() {
+        return visaDateDebut;
+    }
+
+    public void setVisaDateDebut(LocalDate visaDateDebut) {
+        this.visaDateDebut = visaDateDebut;
+    }
+
+    public LocalDate getVisaDateFin() {
+        return visaDateFin;
+    }
+
+    public void setVisaDateFin(LocalDate visaDateFin) {
+        this.visaDateFin = visaDateFin;
+    }
+
+    public String getCarteResidentReference() {
+        return carteResidentReference;
+    }
+
+    public void setCarteResidentReference(String carteResidentReference) {
+        this.carteResidentReference = carteResidentReference;
+    }
+
+    public LocalDate getCarteResidentDateDebut() {
+        return carteResidentDateDebut;
+    }
+
+    public void setCarteResidentDateDebut(LocalDate carteResidentDateDebut) {
+        this.carteResidentDateDebut = carteResidentDateDebut;
+    }
+
+    public LocalDate getCarteResidentDateFin() {
+        return carteResidentDateFin;
+    }
+
+    public void setCarteResidentDateFin(LocalDate carteResidentDateFin) {
+        this.carteResidentDateFin = carteResidentDateFin;
     }
 
     public Integer getIdTypeVisa() {

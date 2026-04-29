@@ -248,6 +248,37 @@
                         </div>
                     </section>
 
+                    <section class="detail-card" id="visaCarteSection" style="display: none;">
+                        <h4>Visa & Carte résident (ancien système)</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="visaReference">Référence visa</label>
+                                <input id="visaReference" name="visaReference" type="text" value="${wizard.visaReference}">
+                            </div>
+                            <div class="form-group">
+                                <label for="visaDateDebut">Date début visa *</label>
+                                <input id="visaDateDebut" name="visaDateDebut" type="date" value="${wizard.visaDateDebut}">
+                            </div>
+                            <div class="form-group">
+                                <label for="visaDateFin">Date fin visa *</label>
+                                <input id="visaDateFin" name="visaDateFin" type="date" value="${wizard.visaDateFin}">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="carteResidentReference">Référence carte résident</label>
+                                <input id="carteResidentReference" name="carteResidentReference" type="text" value="${wizard.carteResidentReference}">
+                            </div>
+                            <div class="form-group">
+                                <label for="carteResidentDateDebut">Date début carte *</label>
+                                <input id="carteResidentDateDebut" name="carteResidentDateDebut" type="date" value="${wizard.carteResidentDateDebut}">
+                            </div>
+                            <div class="form-group">
+                                <label for="carteResidentDateFin">Date fin carte *</label>
+                                <input id="carteResidentDateFin" name="carteResidentDateFin" type="date" value="${wizard.carteResidentDateFin}">
+                            </div>
+                        </div>
+                    </section>
+
                     <section class="detail-card">
                         <h4>Informations de la demande</h4>
                         <div class="form-grid">
@@ -520,9 +551,14 @@
         const manualHint = document.getElementById('ancienPasseportManualHint');
         const demandeurSection = document.getElementById('demandeurSection');
         const visaTransformableSection = document.getElementById('visaTransformableSection');
+        const visaCarteSection = document.getElementById('visaCarteSection');
+        const visaDateDebut = document.getElementById('visaDateDebut');
+        const visaDateFin = document.getElementById('visaDateFin');
+        const carteDateDebut = document.getElementById('carteResidentDateDebut');
+        const carteDateFin = document.getElementById('carteResidentDateFin');
         const refVisa = document.getElementById('numeroReferenceVisaTransformable');
-        const dateDebutVisa = document.getElementById('dateDebutVisaTransformable');
-        const dateFinVisa = document.getElementById('dateExpirationVisaTransformable');
+        const dateDebutVisaTransformable = document.getElementById('dateDebutVisaTransformable');
+        const dateFinVisaTransformable = document.getElementById('dateExpirationVisaTransformable');
         if (!numero) return;
 
         status.textContent = "Recherche en cours...";
@@ -539,23 +575,44 @@
                 if (manualHint) manualHint.style.display = 'none';
 
                 if (visaTransformableSection) visaTransformableSection.style.display = 'none';
+                if (visaCarteSection) visaCarteSection.style.display = 'none';
+                if (visaDateDebut) {
+                    visaDateDebut.required = false;
+                    visaDateDebut.classList.remove('field-found');
+                    visaDateDebut.readOnly = false;
+                }
+                if (visaDateFin) {
+                    visaDateFin.required = false;
+                    visaDateFin.classList.remove('field-found');
+                    visaDateFin.readOnly = false;
+                }
+                if (carteDateDebut) {
+                    carteDateDebut.required = false;
+                    carteDateDebut.classList.remove('field-found');
+                    carteDateDebut.readOnly = false;
+                }
+                if (carteDateFin) {
+                    carteDateFin.required = false;
+                    carteDateFin.classList.remove('field-found');
+                    carteDateFin.readOnly = false;
+                }
                 if (refVisa) {
                     refVisa.required = false;
                     refVisa.value = '';
                     refVisa.classList.remove('field-found');
                     refVisa.readOnly = false;
                 }
-                if (dateDebutVisa) {
-                    dateDebutVisa.required = false;
-                    dateDebutVisa.value = '';
-                    dateDebutVisa.classList.remove('field-found');
-                    dateDebutVisa.readOnly = false;
+                if (dateDebutVisaTransformable) {
+                    dateDebutVisaTransformable.required = false;
+                    dateDebutVisaTransformable.value = '';
+                    dateDebutVisaTransformable.classList.remove('field-found');
+                    dateDebutVisaTransformable.readOnly = false;
                 }
-                if (dateFinVisa) {
-                    dateFinVisa.required = false;
-                    dateFinVisa.value = '';
-                    dateFinVisa.classList.remove('field-found');
-                    dateFinVisa.readOnly = false;
+                if (dateFinVisaTransformable) {
+                    dateFinVisaTransformable.required = false;
+                    dateFinVisaTransformable.value = '';
+                    dateFinVisaTransformable.classList.remove('field-found');
+                    dateFinVisaTransformable.readOnly = false;
                 }
                 
                 // Charger les infos du passeport
@@ -630,8 +687,14 @@
 
                 if (visaTransformableSection) visaTransformableSection.style.display = 'block';
                 if (refVisa) refVisa.required = true;
-                if (dateDebutVisa) dateDebutVisa.required = true;
-                if (dateFinVisa) dateFinVisa.required = true;
+                if (dateDebutVisaTransformable) dateDebutVisaTransformable.required = true;
+                if (dateFinVisaTransformable) dateFinVisaTransformable.required = true;
+
+                if (visaCarteSection) visaCarteSection.style.display = 'block';
+                if (visaDateDebut) visaDateDebut.required = true;
+                if (visaDateFin) visaDateFin.required = true;
+                if (carteDateDebut) carteDateDebut.required = true;
+                if (carteDateFin) carteDateFin.required = true;
                 const passportFields = ['dateDelivranceAncienPasseport', 'dateExpirationAncienPasseport', 'paysDelivranceAncienPasseport'];
                 passportFields.forEach(id => {
                     const el = document.getElementById(id);
@@ -820,6 +883,7 @@
         const passeportNote = document.getElementById('passeportNote');
         const demandeurSection = document.getElementById('demandeurSection');
         const passeportSection = document.getElementById('passeportSection');
+        const visaCarteSection = document.getElementById('visaCarteSection');
 
         const fieldsAncien = ['numeroAncienPasseport', 'dateDelivranceAncienPasseport', 'dateExpirationAncienPasseport', 'paysDelivranceAncienPasseport'];
         const fieldsNouveau = ['numeroPasseport', 'dateDelivrance', 'dateExpiration', 'paysDelivrance'];
@@ -829,6 +893,7 @@
         const dateDebutVisa = document.getElementById('dateDebutVisaTransformable');
         const dateFinVisa = document.getElementById('dateExpirationVisaTransformable');
         const demandeurRequiredFields = ['nom', 'prenom', 'dateNaissance', 'lieuNaissance', 'telephone', 'email', 'adresse', 'idSituationFamiliale', 'idNationalite'];
+        const visaCarteFields = ['visaDateDebut', 'visaDateFin', 'carteResidentDateDebut', 'carteResidentDateFin'];
 
         if (typeDemandeSelect && ancienPasseportGroup && duplicataSection && visaTransformableSection) {
             if (typeDemandeSelect.value == "2") { // Transfert VISA
@@ -889,10 +954,20 @@
                 if (refVisa) refVisa.required = false;
                 if (dateDebutVisa) dateDebutVisa.required = false;
                 if (dateFinVisa) dateFinVisa.required = false;
+                if (visaCarteSection) visaCarteSection.style.display = 'none';
+                visaCarteFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.required = false;
+                });
             } else { // Nouveau Titre
                 ancienPasseportGroup.style.display = 'none';
                 if (demandeurSection) demandeurSection.style.display = 'block';
                 if (passeportSection) passeportSection.style.display = 'block';
+                if (visaCarteSection) visaCarteSection.style.display = 'none';
+                visaCarteFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.required = false;
+                });
                 demandeurRequiredFields.forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.required = true;
