@@ -21,6 +21,10 @@ public class DemandeWizardData {
     private LocalDate dateExpirationAncienPasseport;
     private String paysDelivranceAncienPasseport;
     private String referenceCarteOriginale;
+    private String duplicataTypeDossier;
+    private String referenceVisaOriginale;
+    private LocalDate dateDebutVisaOriginale;
+    private LocalDate dateFinVisaOriginale;
     private String motifDuplicata;
     private LocalDate dateDebutCarteOriginale;
     private LocalDate dateFinCarteOriginale;
@@ -161,6 +165,38 @@ public class DemandeWizardData {
 
     public void setReferenceCarteOriginale(String referenceCarteOriginale) {
         this.referenceCarteOriginale = referenceCarteOriginale;
+    }
+
+    public String getDuplicataTypeDossier() {
+        return duplicataTypeDossier;
+    }
+
+    public void setDuplicataTypeDossier(String duplicataTypeDossier) {
+        this.duplicataTypeDossier = duplicataTypeDossier;
+    }
+
+    public String getReferenceVisaOriginale() {
+        return referenceVisaOriginale;
+    }
+
+    public void setReferenceVisaOriginale(String referenceVisaOriginale) {
+        this.referenceVisaOriginale = referenceVisaOriginale;
+    }
+
+    public LocalDate getDateDebutVisaOriginale() {
+        return dateDebutVisaOriginale;
+    }
+
+    public void setDateDebutVisaOriginale(LocalDate dateDebutVisaOriginale) {
+        this.dateDebutVisaOriginale = dateDebutVisaOriginale;
+    }
+
+    public LocalDate getDateFinVisaOriginale() {
+        return dateFinVisaOriginale;
+    }
+
+    public void setDateFinVisaOriginale(LocalDate dateFinVisaOriginale) {
+        this.dateFinVisaOriginale = dateFinVisaOriginale;
     }
 
     public String getMotifDuplicata() {

@@ -340,6 +340,10 @@ public class DemandeController {
                         @RequestParam(name = "dateExpirationAncienPasseport", required = false) LocalDate dateExpirationAncienPasseport,
                         @RequestParam(name = "paysDelivranceAncienPasseport", required = false) String paysDelivranceAncienPasseport,
                         @RequestParam(name = "referenceCarteOriginale", required = false) String referenceCarteOriginale,
+                        @RequestParam(name = "duplicataTypeDossier", required = false) String duplicataTypeDossier,
+                        @RequestParam(name = "referenceVisaOriginale", required = false) String referenceVisaOriginale,
+                        @RequestParam(name = "dateDebutVisaOriginale", required = false) LocalDate dateDebutVisaOriginale,
+                        @RequestParam(name = "dateFinVisaOriginale", required = false) LocalDate dateFinVisaOriginale,
                         @RequestParam(name = "motifDuplicata", required = false) String motifDuplicata,
                         @RequestParam(name = "dateDebutCarteOriginale", required = false) LocalDate dateDebutCarteOriginale,
                         @RequestParam(name = "dateFinCarteOriginale", required = false) LocalDate dateFinCarteOriginale,
@@ -377,6 +381,10 @@ public class DemandeController {
                 wizard.setDateExpirationAncienPasseport(dateExpirationAncienPasseport);
                 wizard.setPaysDelivranceAncienPasseport(paysDelivranceAncienPasseport);
                 wizard.setReferenceCarteOriginale(referenceCarteOriginale);
+                wizard.setDuplicataTypeDossier(duplicataTypeDossier);
+                wizard.setReferenceVisaOriginale(referenceVisaOriginale);
+                wizard.setDateDebutVisaOriginale(dateDebutVisaOriginale);
+                wizard.setDateFinVisaOriginale(dateFinVisaOriginale);
                 wizard.setMotifDuplicata(motifDuplicata);
                 wizard.setDateDebutCarteOriginale(dateDebutCarteOriginale);
                 wizard.setDateFinCarteOriginale(dateFinCarteOriginale);
@@ -960,14 +968,102 @@ public class DemandeController {
                 RefStatutPasseport statutActif = refStatutPasseportService.findById(STATUT_PASSEPORT_ACTIF)
                                 .orElseThrow(() -> new IllegalArgumentException("Statut passeport actif introuvable"));
 
-                Optional<CarteResident> carteOpt = carteResidentService.findByReference(wizard.getReferenceCarteOriginale());
-                boolean carteTrouvee = carteOpt.isPresent();
+                String typeDossier = wizard.getDuplicataTypeDossier();
+                if (typeDossier == null || typeDossier.isBlank()) {
+                        typeDossier = "CARTE";
+                }
+
+                Optional<CarteResident> carteOpt = Optional.empty();
+                boolean carteTrouvee = false;
+                if ("CARTE".equalsIgnoreCase(typeDossier) && wizard.getReferenceCarteOriginale() != null
+                                && !wizard.getReferenceCarteOriginale().isBlank()) {
+                        carteOpt = carteResidentService.findByReference(wizard.getReferenceCarteOriginale());
+                        carteTrouvee = carteOpt.isPresent();
+                }
+
+                Optional<Visa> visaOpt = Optional.empty();
+                boolean visaTrouve = false;
+                if ("VISA".equalsIgnoreCase(typeDossier) && wizard.getReferenceVisaOriginale() != null
+                                && !wizard.getReferenceVisaOriginale().isBlank()) {
+                        visaOpt = visaService.findByReference(wizard.getReferenceVisaOriginale());
+                        visaTrouve = visaOpt.isPresent();
+                }
 
                 String motif = wizard.getMotifDuplicata();
 
                 Demandeur demandeur;
                 Passeport passeport;
                 CarteResident carteOriginale;
+
+                Visa visaOriginal;
+
+                if (visaTrouve) {
+                        visaOriginal = visaOpt.get();
+                        if (visaOriginal.getPasseport() == null) {
+                                throw new IllegalArgumentException(
+                                                "Le visa original trouvé n'a pas de passeport associé.");
+                        }
+                        passeport = visaOriginal.getPasseport();
+                        if (passeport.getDemandeur() == null) {
+                                throw new IllegalArgumentException(
+                                                "Le passeport du visa original trouvé n'a pas de demandeur associé.");
+                        }
+                        demandeur = passeport.getDemandeur();
+
+                        if ("Perdu".equalsIgnoreCase(motif) || "Volé".equalsIgnoreCase(motif)) {
+                                int codeStatut = "Perdu".equalsIgnoreCase(motif) ? STATUT_PASSEPORT_PERDU
+                                                : STATUT_PASSEPORT_VOLE;
+                                RefStatutPasseport nouveauStatut = refStatutPasseportService.findById(codeStatut)
+                                                .orElseThrow(() -> new IllegalArgumentException(
+                                                                "Statut passeport introuvable"));
+
+                                passeport.setStatutActuel(nouveauStatut);
+                                passeportService.save(passeport);
+
+                                HistoriqueStatutPasseport histP = new HistoriqueStatutPasseport();
+                                histP.setPasseport(passeport);
+                                histP.setStatut(nouveauStatut);
+                                histP.setDateChangementStatut(LocalDateTime.now());
+                                historiqueStatutPasseportService.save(histP);
+                        }
+
+                        Demande demandeUnique = new Demande();
+                        demandeUnique.setDemandeur(demandeur);
+                        demandeUnique.setVisaTransformable(null);
+                        demandeUnique.setTypeVisa(typeVisaService.findById(wizard.getIdTypeVisa())
+                                        .orElseThrow(() -> new IllegalArgumentException("Type visa introuvable")));
+                        demandeUnique.setTypeDemande(typeDemandeService.findById(TYPE_DEMANDE_DUPLICATA)
+                                        .orElseThrow(() -> new IllegalArgumentException("Type demande Duplicata introuvable")));
+                        demandeUnique.setStatut(refStatutDemandeService.findById(STATUT_DEMANDE_CREEE)
+                                        .orElseThrow(() -> new IllegalArgumentException("Statut demande Créée introuvable")));
+                        demandeUnique.setDateDemande(wizard.getDateDemande());
+                        demandeUnique.setDemandeParent(null);
+                        Demande savedDemandeUnique = demandeService.save(demandeUnique);
+
+                        DemandeDuplicata duplicata = new DemandeDuplicata();
+                        duplicata.setDemande(savedDemandeUnique);
+                        duplicata.setVisaOriginal(visaOriginal);
+                        duplicata.setCarteOriginale(null);
+                        duplicata.setMotif(motif);
+                        demandeDuplicataService.save(duplicata);
+
+                        for (PieceJustificative piece : piecesEligibles) {
+                                DemandePiece demandePiece = new DemandePiece();
+                                demandePiece.setDemande(savedDemandeUnique);
+                                demandePiece.setPiece(piece);
+                                demandePiece.setEstFourni(false);
+                                demandePiece.setDateUpload(LocalDateTime.now());
+                                demandePieceService.save(demandePiece);
+                        }
+
+                        HistoriqueStatutDemande histUnique = new HistoriqueStatutDemande();
+                        histUnique.setDemande(savedDemandeUnique);
+                        histUnique.setStatut(savedDemandeUnique.getStatut());
+                        histUnique.setDateChangement(LocalDateTime.now());
+                        historiqueStatutDemandeService.save(histUnique);
+
+                        return savedDemandeUnique;
+                }
 
                 if (carteTrouvee) {
                         carteOriginale = carteOpt.get();
@@ -1018,6 +1114,7 @@ public class DemandeController {
                         DemandeDuplicata duplicata = new DemandeDuplicata();
                         duplicata.setDemande(savedDemandeUnique);
                         duplicata.setCarteOriginale(carteOriginale);
+                        duplicata.setVisaOriginal(null);
                         duplicata.setMotif(motif);
                         demandeDuplicataService.save(duplicata);
 
@@ -1039,7 +1136,7 @@ public class DemandeController {
                         return savedDemandeUnique;
                 }
 
-                // Carte absente (ancien système) -> 2 demandes (parent Nouveau titre Validée + enfant Duplicata Créée)
+                // Dossier absent (ancien système) -> 2 demandes (parent Nouveau titre Validée + enfant Duplicata Créée)
                 demandeur = demandeurService.findByContact(wizard.getEmail(), wizard.getTelephone())
                                 .orElseGet(() -> demandeurService.save(construireDemandeur(wizard)));
 
@@ -1081,9 +1178,24 @@ public class DemandeController {
                         historiqueStatutPasseportService.save(histP);
                 }
 
+                if (wizard.getDateDebutVisaTransformable() == null || wizard.getDateExpirationVisaTransformable() == null
+                                || wizard.getNumeroReferenceVisaTransformable() == null
+                                || wizard.getNumeroReferenceVisaTransformable().isBlank()) {
+                        throw new IllegalArgumentException(
+                                        "Veuillez renseigner le visa transformable (référence + dates) pour le duplicata sans données antérieures.");
+                }
+
+                VisaTransformable visaTransformable = new VisaTransformable();
+                visaTransformable.setDemandeur(demandeur);
+                visaTransformable.setPasseport(passeport);
+                visaTransformable.setDateDebut(wizard.getDateDebutVisaTransformable());
+                visaTransformable.setDateExpiration(wizard.getDateExpirationVisaTransformable());
+                visaTransformable.setNumeroReference(wizard.getNumeroReferenceVisaTransformable());
+                VisaTransformable savedVisaTransformable = visaTransformableService.save(visaTransformable);
+
                 Demande demandeParent = new Demande();
                 demandeParent.setDemandeur(demandeur);
-                demandeParent.setVisaTransformable(null);
+                demandeParent.setVisaTransformable(savedVisaTransformable);
                 demandeParent.setTypeVisa(typeVisaService.findById(wizard.getIdTypeVisa())
                                 .orElseThrow(() -> new IllegalArgumentException("Type visa introuvable")));
                 demandeParent.setTypeDemande(typeDemandeService.findById(TYPE_DEMANDE_NOUVEAU_TITRE)
@@ -1095,18 +1207,57 @@ public class DemandeController {
                 demandeParent.setDemandeParent(null);
                 Demande savedDemandeParent = demandeService.save(demandeParent);
 
-                if (wizard.getDateDebutCarteOriginale() == null || wizard.getDateFinCarteOriginale() == null) {
+                if (wizard.getVisaDateDebut() == null || wizard.getVisaDateFin() == null
+                                || wizard.getCarteResidentDateDebut() == null || wizard.getCarteResidentDateFin() == null) {
                         throw new IllegalArgumentException(
-                                        "La carte originale est introuvable. Veuillez saisir ses dates (début et fin) car elle provient probablement de l'ancien système.");
+                                        "Veuillez renseigner les informations du nouveau visa et de la nouvelle carte résident (dates début/fin).");
                 }
 
+                Visa newVisa = new Visa();
+                newVisa.setDemande(savedDemandeParent);
+                newVisa.setPasseport(passeport);
+                newVisa.setReference(wizard.getVisaReference());
+                newVisa.setDateDebut(wizard.getVisaDateDebut());
+                newVisa.setDateFin(wizard.getVisaDateFin());
+                visaService.save(newVisa);
+
                 CarteResident newCarte = new CarteResident();
-                newCarte.setReference(wizard.getReferenceCarteOriginale());
-                newCarte.setDateDebut(wizard.getDateDebutCarteOriginale());
-                newCarte.setDateFin(wizard.getDateFinCarteOriginale());
+                newCarte.setReference(wizard.getCarteResidentReference());
+                newCarte.setDateDebut(wizard.getCarteResidentDateDebut());
+                newCarte.setDateFin(wizard.getCarteResidentDateFin());
                 newCarte.setDemande(savedDemandeParent);
                 newCarte.setPasseport(passeport);
-                carteOriginale = carteResidentService.save(newCarte);
+                carteResidentService.save(newCarte);
+
+                carteOriginale = null;
+                visaOriginal = null;
+                if ("CARTE".equalsIgnoreCase(typeDossier)) {
+                        if (wizard.getDateDebutCarteOriginale() == null || wizard.getDateFinCarteOriginale() == null) {
+                                throw new IllegalArgumentException(
+                                                "La carte originale est introuvable. Veuillez saisir ses dates (début et fin) car elle provient probablement de l'ancien système.");
+                        }
+                        CarteResident originalCarte = new CarteResident();
+                        originalCarte.setReference(wizard.getReferenceCarteOriginale());
+                        originalCarte.setDateDebut(wizard.getDateDebutCarteOriginale());
+                        originalCarte.setDateFin(wizard.getDateFinCarteOriginale());
+                        originalCarte.setDemande(savedDemandeParent);
+                        originalCarte.setPasseport(passeport);
+                        carteOriginale = carteResidentService.save(originalCarte);
+                } else if ("VISA".equalsIgnoreCase(typeDossier)) {
+                        if (wizard.getDateDebutVisaOriginale() == null || wizard.getDateFinVisaOriginale() == null) {
+                                throw new IllegalArgumentException(
+                                                "Le visa original est introuvable. Veuillez saisir ses dates (début et fin) car il provient probablement de l'ancien système.");
+                        }
+                        Visa originalVisa = new Visa();
+                        originalVisa.setReference(wizard.getReferenceVisaOriginale());
+                        originalVisa.setDateDebut(wizard.getDateDebutVisaOriginale());
+                        originalVisa.setDateFin(wizard.getDateFinVisaOriginale());
+                        originalVisa.setDemande(savedDemandeParent);
+                        originalVisa.setPasseport(passeport);
+                        visaOriginal = visaService.save(originalVisa);
+                } else {
+                        throw new IllegalArgumentException("Type de dossier à dupliquer invalide.");
+                }
 
                 Demande demandeEnfant = new Demande();
                 demandeEnfant.setDemandeur(demandeur);
@@ -1123,6 +1274,7 @@ public class DemandeController {
                 DemandeDuplicata duplicata = new DemandeDuplicata();
                 duplicata.setDemande(savedDemandeEnfant);
                 duplicata.setCarteOriginale(carteOriginale);
+                duplicata.setVisaOriginal(visaOriginal);
                 duplicata.setMotif(motif);
                 demandeDuplicataService.save(duplicata);
 
@@ -1251,6 +1403,54 @@ public class DemandeController {
                         response.put("idNationalite", d.getNationalite().getId());
                         return ResponseEntity.ok(response);
                 }
+                Map<String, Object> fail = new HashMap<>();
+                fail.put("found", false);
+                return ResponseEntity.ok(fail);
+        }
+
+        @GetMapping("/api/search/visaRecord")
+        @ResponseBody
+        public ResponseEntity<?> searchVisaRecord(@RequestParam("reference") String reference) {
+                Optional<Visa> visaOpt = visaService.findByReference(reference);
+                if (visaOpt.isPresent()) {
+                        Visa v = visaOpt.get();
+                        Map<String, Object> ok = new HashMap<>();
+                        ok.put("found", true);
+                        ok.put("reference", v.getReference());
+                        ok.put("dateDebut", v.getDateDebut());
+                        ok.put("dateFin", v.getDateFin());
+
+                        if (v.getPasseport() != null) {
+                                Passeport p = v.getPasseport();
+                                Map<String, Object> passeport = new HashMap<>();
+                                passeport.put("numeroPasseport", p.getNumeroPasseport());
+                                passeport.put("dateDelivrance", p.getDateDelivrance());
+                                passeport.put("dateExpiration", p.getDateExpiration());
+                                passeport.put("paysDelivrance", p.getPaysDelivrance());
+                                ok.put("passeport", passeport);
+
+                                if (p.getDemandeur() != null) {
+                                        Demandeur d = p.getDemandeur();
+                                        Map<String, Object> demandeur = new HashMap<>();
+                                        demandeur.put("nom", d.getNom());
+                                        demandeur.put("prenom", d.getPrenom());
+                                        demandeur.put("dateNaissance", d.getDateNaissance());
+                                        demandeur.put("lieuNaissance", d.getLieuNaissance());
+                                        demandeur.put("telephone", d.getTelephone());
+                                        demandeur.put("email", d.getEmail());
+                                        demandeur.put("adresse", d.getAdresse());
+                                        if (d.getSituationFamiliale() != null) {
+                                                demandeur.put("idSituationFamiliale", d.getSituationFamiliale().getId());
+                                        }
+                                        if (d.getNationalite() != null) {
+                                                demandeur.put("idNationalite", d.getNationalite().getId());
+                                        }
+                                        ok.put("demandeur", demandeur);
+                                }
+                        }
+                        return ResponseEntity.ok(ok);
+                }
+
                 Map<String, Object> fail = new HashMap<>();
                 fail.put("found", false);
                 return ResponseEntity.ok(fail);

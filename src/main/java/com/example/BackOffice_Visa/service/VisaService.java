@@ -27,6 +27,10 @@ public class VisaService {
         return visaRepository.findById(id);
     }
 
+    public Optional<Visa> findByReference(String reference) {
+        return visaRepository.findByReference(reference);
+    }
+
     @Transactional
     public Visa save(Visa visa) {
         return visaRepository.save(visa);

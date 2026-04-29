@@ -176,10 +176,12 @@ CREATE TABLE Demande_Transfert (
 CREATE TABLE Demande_Duplicata (
     id SERIAL PRIMARY KEY,
     id_demande INT NOT NULL,               -- la demande enfant (type=3)
-    id_carte_originale INT NOT NULL,
+    id_carte_originale INT,
+    id_visa_originale INT,
     motif VARCHAR(50) NOT NULL,            -- 'Perdu', 'Volé', 'Détérioré'
     CONSTRAINT fk_duplicata_demande FOREIGN KEY (id_demande) REFERENCES Demande(id) ON DELETE CASCADE,
-    CONSTRAINT fk_duplicata_carte FOREIGN KEY (id_carte_originale) REFERENCES carte_resident(id)
+    CONSTRAINT fk_duplicata_carte FOREIGN KEY (id_carte_originale) REFERENCES carte_resident(id),
+    CONSTRAINT fk_duplicata_visa FOREIGN KEY (id_visa_originale) REFERENCES Visa(id)
 );
 
 -- ==========================================================

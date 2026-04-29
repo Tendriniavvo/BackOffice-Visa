@@ -21,9 +21,13 @@ public class DemandeDuplicata {
     @JoinColumn(name = "id_demande", nullable = false)
     private Demande demande;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "id_carte_originale", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "id_carte_originale")
     private CarteResident carteOriginale;
+
+    @ManyToOne
+    @JoinColumn(name = "id_visa_originale")
+    private Visa visaOriginal;
 
     @Column(nullable = false, length = 50)
     private String motif;
@@ -50,6 +54,14 @@ public class DemandeDuplicata {
 
     public void setCarteOriginale(CarteResident carteOriginale) {
         this.carteOriginale = carteOriginale;
+    }
+
+    public Visa getVisaOriginal() {
+        return visaOriginal;
+    }
+
+    public void setVisaOriginal(Visa visaOriginal) {
+        this.visaOriginal = visaOriginal;
     }
 
     public String getMotif() {

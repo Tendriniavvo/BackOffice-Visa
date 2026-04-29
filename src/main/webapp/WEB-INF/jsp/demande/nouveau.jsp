@@ -188,6 +188,20 @@
                     <section class="detail-card" id="duplicataSection" style="${wizard.idTypeDemande == 3 ? 'display: block;' : 'display: none;'}">
                         <h4>Détails Duplicata</h4>
                         <div class="form-grid">
+                            <div class="form-group form-group-full">
+                                <label>Dossier à dupliquer</label>
+                                <div style="display:flex; gap:16px; align-items:center;">
+                                    <label style="display:flex; gap:8px; align-items:center;">
+                                        <input type="radio" name="duplicataTypeDossier" id="duplicataTypeCarte" value="CARTE" ${empty wizard.duplicataTypeDossier || wizard.duplicataTypeDossier == 'CARTE' ? 'checked' : ''}>
+                                        <span>Carte résident</span>
+                                    </label>
+                                    <label style="display:flex; gap:8px; align-items:center;">
+                                        <input type="radio" name="duplicataTypeDossier" id="duplicataTypeVisa" value="VISA" ${wizard.duplicataTypeDossier == 'VISA' ? 'checked' : ''}>
+                                        <span>Visa</span>
+                                    </label>
+                                </div>
+                            </div>
+
                             <div class="form-group">
                                 <label for="referenceCarteOriginale">Référence carte résidente originale</label>
                                 <div style="display: flex; gap: 8px;">
@@ -197,6 +211,18 @@
                                 <span id="searchCarteResidentStatus" style="font-size: 0.85rem; margin-top: 4px; display: block;"></span>
                                 <span id="carteResidentManualHint" style="font-size: 0.85rem; margin-top: 4px; display: none; color: var(--text-secondary);">
                                     Carte non trouvée — saisir manuellement
+                                </span>
+                            </div>
+
+                            <div class="form-group" id="visaOriginalGroup" style="display:none;">
+                                <label for="referenceVisaOriginale">Référence visa original</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input id="referenceVisaOriginale" name="referenceVisaOriginale" type="text" value="${wizard.referenceVisaOriginale}" style="flex: 1;">
+                                    <button type="button" class="btn-primary" onclick="searchVisaRecord()" style="width: auto; white-space: nowrap;">Rechercher</button>
+                                </div>
+                                <span id="searchVisaRecordStatus" style="font-size: 0.85rem; margin-top: 4px; display: block;"></span>
+                                <span id="visaOriginalManualHint" style="font-size: 0.85rem; margin-top: 4px; display: none; color: var(--text-secondary);">
+                                    Visa non trouvé — saisir manuellement
                                 </span>
                             </div>
                             <div class="form-group">
@@ -220,13 +246,26 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div id="visaOriginalManualFields" class="form-group-full" style="display:none;">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="dateDebutVisaOriginale">Date début visa original (si ancien système)</label>
+                                        <input id="dateDebutVisaOriginale" name="dateDebutVisaOriginale" type="date" value="${wizard.dateDebutVisaOriginale}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dateFinVisaOriginale">Date fin visa original (si ancien système)</label>
+                                        <input id="dateFinVisaOriginale" name="dateFinVisaOriginale" type="date" value="${wizard.dateFinVisaOriginale}">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <p id="duplicataInfoNote" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 12px; display: none;">
                             Si la carte est trouvée, toutes les informations (demandeur, passeport) sont chargées automatiquement.
                         </p>
                     </section>
 
-                    <section class="detail-card" id="visaTransformableSection" style="${wizard.idTypeDemande == 3 ? 'display: none;' : 'display: block;'}">
+                    <section class="detail-card" id="visaTransformableSection" style="display: block;">
                         <h4>Visa transformable</h4>
                         <div class="form-grid">
                             <div class="form-group form-group-full">
@@ -403,12 +442,256 @@
         }
     }
 
+    function toggleDuplicataTypeDossier() {
+        const typeDemandeSelect = document.getElementById('idTypeDemande');
+        if (!typeDemandeSelect || typeDemandeSelect.value !== '3') {
+            return;
+        }
+
+        const typeCarteRadio = document.getElementById('duplicataTypeCarte');
+        const typeVisaRadio = document.getElementById('duplicataTypeVisa');
+        const visaOriginalGroup = document.getElementById('visaOriginalGroup');
+        const visaOriginalManualFields = document.getElementById('visaOriginalManualFields');
+        const visaOriginalManualHint = document.getElementById('visaOriginalManualHint');
+        const carteManualFields = document.getElementById('carteResidentManualFields');
+        const carteManualHint = document.getElementById('carteResidentManualHint');
+
+        const refCarte = document.getElementById('referenceCarteOriginale');
+        const refVisaOriginale = document.getElementById('referenceVisaOriginale');
+        const dateDebutVisaOriginale = document.getElementById('dateDebutVisaOriginale');
+        const dateFinVisaOriginale = document.getElementById('dateFinVisaOriginale');
+
+        const isVisa = typeVisaRadio && typeVisaRadio.checked;
+
+        if (refCarte) refCarte.required = !isVisa;
+        if (refVisaOriginale) refVisaOriginale.required = isVisa;
+
+        if (visaOriginalGroup) visaOriginalGroup.style.display = isVisa ? 'block' : 'none';
+
+        if (!isVisa) {
+            if (visaOriginalManualFields) visaOriginalManualFields.style.display = 'none';
+            if (visaOriginalManualHint) visaOriginalManualHint.style.display = 'none';
+            if (dateDebutVisaOriginale) {
+                dateDebutVisaOriginale.required = false;
+                dateDebutVisaOriginale.readOnly = false;
+                dateDebutVisaOriginale.classList.remove('field-found');
+            }
+            if (dateFinVisaOriginale) {
+                dateFinVisaOriginale.required = false;
+                dateFinVisaOriginale.readOnly = false;
+                dateFinVisaOriginale.classList.remove('field-found');
+            }
+        }
+
+        if (isVisa) {
+            if (carteManualFields) carteManualFields.style.display = 'none';
+            if (carteManualHint) carteManualHint.style.display = 'none';
+            const dateDebutCarte = document.getElementById('dateDebutCarteOriginale');
+            const dateFinCarte = document.getElementById('dateFinCarteOriginale');
+            if (dateDebutCarte) {
+                dateDebutCarte.required = false;
+                dateDebutCarte.readOnly = false;
+                dateDebutCarte.classList.remove('field-found');
+            }
+            if (dateFinCarte) {
+                dateFinCarte.required = false;
+                dateFinCarte.readOnly = false;
+                dateFinCarte.classList.remove('field-found');
+            }
+        }
+    }
+
+    async function searchVisaRecord() {
+        const typeVisaRadio = document.getElementById('duplicataTypeVisa');
+        if (!typeVisaRadio || !typeVisaRadio.checked) {
+            return;
+        }
+        const reference = document.getElementById('referenceVisaOriginale')?.value;
+        const status = document.getElementById('searchVisaRecordStatus');
+        const manualHint = document.getElementById('visaOriginalManualHint');
+        const manualFields = document.getElementById('visaOriginalManualFields');
+        const visaTransformableSection = document.getElementById('visaTransformableSection');
+        const visaCarteSection = document.getElementById('visaCarteSection');
+        const refVisaTrans = document.getElementById('numeroReferenceVisaTransformable');
+        const dateDebutTrans = document.getElementById('dateDebutVisaTransformable');
+        const dateFinTrans = document.getElementById('dateExpirationVisaTransformable');
+        const newVisaDateDebut = document.getElementById('visaDateDebut');
+        const newVisaDateFin = document.getElementById('visaDateFin');
+        const newCarteDateDebut = document.getElementById('carteResidentDateDebut');
+        const newCarteDateFin = document.getElementById('carteResidentDateFin');
+        const passeportSection = document.getElementById('passeportSection');
+        const demandeurSection = document.getElementById('demandeurSection');
+        if (!reference) return;
+
+        if (status) {
+            status.textContent = "Recherche en cours...";
+            status.style.color = "var(--text-secondary)";
+        }
+        if (manualHint) manualHint.style.display = 'none';
+
+        try {
+            const response = await fetch("/api/search/visaRecord?reference=" + encodeURIComponent(reference));
+            const data = await response.json();
+
+            const demandeurFields = ['nom', 'prenom', 'dateNaissance', 'lieuNaissance', 'telephone', 'email', 'adresse', 'idSituationFamiliale', 'idNationalite'];
+            const passeportFields = ['numeroPasseport', 'dateDelivrance', 'dateExpiration', 'paysDelivrance'];
+
+            if (response.ok && data.found) {
+                if (status) {
+                    status.textContent = "Trouvé — informations chargées automatiquement";
+                    status.style.color = "var(--green)";
+                }
+                if (manualHint) manualHint.style.display = 'none';
+                if (manualFields) manualFields.style.display = 'none';
+                if (passeportSection) passeportSection.style.display = 'block';
+                if (demandeurSection) demandeurSection.style.display = 'block';
+
+                const dateDebutVisa = document.getElementById('dateDebutVisaOriginale');
+                const dateFinVisa = document.getElementById('dateFinVisaOriginale');
+                if (dateDebutVisa) {
+                    dateDebutVisa.required = false;
+                    dateDebutVisa.value = data.dateDebut || '';
+                    dateDebutVisa.readOnly = true;
+                }
+                if (dateFinVisa) {
+                    dateFinVisa.required = false;
+                    dateFinVisa.value = data.dateFin || '';
+                    dateFinVisa.readOnly = true;
+                }
+
+                passeportFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        const v = data.passeport ? data.passeport[id] : '';
+                        el.value = v ?? '';
+                        el.classList.add('field-found');
+                        el.readOnly = true;
+                        el.required = true;
+                    }
+                });
+
+                const demandeurStatus = document.getElementById('searchDemandeurStatus');
+                if (demandeurStatus) {
+                    demandeurStatus.textContent = "Trouvé — informations chargées automatiquement";
+                    demandeurStatus.style.color = "var(--green)";
+                }
+                const note = document.getElementById('demandeurNote');
+                if (note) note.style.display = 'block';
+
+                demandeurFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        const v = data.demandeur ? data.demandeur[id] : '';
+                        el.value = v ?? '';
+                        el.classList.add('field-found');
+                        el.readOnly = true;
+                        el.required = true;
+                        if (el.tagName === 'SELECT') {
+                            el.style.pointerEvents = 'none';
+                            el.style.backgroundColor = 'var(--bg-secondary)';
+                        }
+                    }
+                });
+
+                if (visaTransformableSection) visaTransformableSection.style.display = 'none';
+                if (visaCarteSection) visaCarteSection.style.display = 'none';
+                if (refVisaTrans) refVisaTrans.required = false;
+                if (dateDebutTrans) dateDebutTrans.required = false;
+                if (dateFinTrans) dateFinTrans.required = false;
+                if (newVisaDateDebut) newVisaDateDebut.required = false;
+                if (newVisaDateFin) newVisaDateFin.required = false;
+                if (newCarteDateDebut) newCarteDateDebut.required = false;
+                if (newCarteDateFin) newCarteDateFin.required = false;
+            } else {
+                if (status) {
+                    status.textContent = "Non trouvé — visa venant de l'ancien système";
+                    status.style.color = "var(--red)";
+                }
+                if (manualHint) manualHint.style.display = 'block';
+                if (manualFields) manualFields.style.display = 'block';
+                if (passeportSection) passeportSection.style.display = 'block';
+                if (demandeurSection) demandeurSection.style.display = 'block';
+
+                const dateDebutVisa = document.getElementById('dateDebutVisaOriginale');
+                const dateFinVisa = document.getElementById('dateFinVisaOriginale');
+                if (dateDebutVisa) {
+                    dateDebutVisa.readOnly = false;
+                    dateDebutVisa.required = true;
+                    dateDebutVisa.classList.remove('field-found');
+                }
+                if (dateFinVisa) {
+                    dateFinVisa.readOnly = false;
+                    dateFinVisa.required = true;
+                    dateFinVisa.classList.remove('field-found');
+                }
+
+                passeportFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.remove('field-found');
+                        el.readOnly = false;
+                        el.required = true;
+                    }
+                });
+
+                const demandeurStatus = document.getElementById('searchDemandeurStatus');
+                if (demandeurStatus) {
+                    demandeurStatus.textContent = "Informations du demandeur — à saisir";
+                    demandeurStatus.style.color = "var(--red)";
+                }
+                const note = document.getElementById('demandeurNote');
+                if (note) note.style.display = 'none';
+                demandeurFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.remove('field-found');
+                        el.readOnly = false;
+                        el.required = true;
+                        if (el.tagName === 'SELECT') {
+                            el.style.pointerEvents = 'auto';
+                            el.style.backgroundColor = '';
+                        }
+                    }
+                });
+
+                if (visaTransformableSection) visaTransformableSection.style.display = 'block';
+                if (visaCarteSection) visaCarteSection.style.display = 'block';
+                if (refVisaTrans) refVisaTrans.required = true;
+                if (dateDebutTrans) dateDebutTrans.required = true;
+                if (dateFinTrans) dateFinTrans.required = true;
+                if (newVisaDateDebut) newVisaDateDebut.required = true;
+                if (newVisaDateFin) newVisaDateFin.required = true;
+                if (newCarteDateDebut) newCarteDateDebut.required = true;
+                if (newCarteDateFin) newCarteDateFin.required = true;
+            }
+        } catch (error) {
+            if (status) {
+                status.textContent = "Erreur lors de la recherche";
+                status.style.color = "var(--red)";
+            }
+            if (manualHint) manualHint.style.display = 'none';
+        }
+    }
+
     async function searchCarteResident() {
+        const typeVisaRadio = document.getElementById('duplicataTypeVisa');
+        if (typeVisaRadio && typeVisaRadio.checked) {
+            return;
+        }
         const reference = document.getElementById('referenceCarteOriginale')?.value;
         const status = document.getElementById('searchCarteResidentStatus');
         const manualHint = document.getElementById('carteResidentManualHint');
         const manualFields = document.getElementById('carteResidentManualFields');
         const infoNote = document.getElementById('duplicataInfoNote');
+        const visaTransformableSection = document.getElementById('visaTransformableSection');
+        const visaCarteSection = document.getElementById('visaCarteSection');
+        const refVisaTrans = document.getElementById('numeroReferenceVisaTransformable');
+        const dateDebutTrans = document.getElementById('dateDebutVisaTransformable');
+        const dateFinTrans = document.getElementById('dateExpirationVisaTransformable');
+        const newVisaDateDebut = document.getElementById('visaDateDebut');
+        const newVisaDateFin = document.getElementById('visaDateFin');
+        const newCarteDateDebut = document.getElementById('carteResidentDateDebut');
+        const newCarteDateFin = document.getElementById('carteResidentDateFin');
         const passeportSection = document.getElementById('passeportSection');
         const demandeurSection = document.getElementById('demandeurSection');
         if (!reference) return;
@@ -884,6 +1167,8 @@
         const demandeurSection = document.getElementById('demandeurSection');
         const passeportSection = document.getElementById('passeportSection');
         const visaCarteSection = document.getElementById('visaCarteSection');
+        const visaOriginalGroup = document.getElementById('visaOriginalGroup');
+        const visaOriginalManualFields = document.getElementById('visaOriginalManualFields');
 
         const fieldsAncien = ['numeroAncienPasseport', 'dateDelivranceAncienPasseport', 'dateExpirationAncienPasseport', 'paysDelivranceAncienPasseport'];
         const fieldsNouveau = ['numeroPasseport', 'dateDelivrance', 'dateExpiration', 'paysDelivrance'];
@@ -959,6 +1244,21 @@
                     const el = document.getElementById(id);
                     if (el) el.required = false;
                 });
+
+                const typeVisaRadio = document.getElementById('duplicataTypeVisa');
+                if (typeVisaRadio && typeVisaRadio.checked) {
+                    if (visaOriginalGroup) visaOriginalGroup.style.display = 'block';
+                    if (visaOriginalManualFields) visaOriginalManualFields.style.display = 'none';
+                    if (refCarte) {
+                        refCarte.required = false;
+                    }
+                } else {
+                    if (visaOriginalGroup) visaOriginalGroup.style.display = 'none';
+                    if (visaOriginalManualFields) visaOriginalManualFields.style.display = 'none';
+                    if (refCarte) {
+                        refCarte.required = true;
+                    }
+                }
             } else { // Nouveau Titre
                 ancienPasseportGroup.style.display = 'none';
                 if (demandeurSection) demandeurSection.style.display = 'block';
@@ -1003,6 +1303,16 @@
         typeDemandeSelect.addEventListener('change', toggleAncienPasseport);
         toggleAncienPasseport();
     }
+
+    const dupCarte = document.getElementById('duplicataTypeCarte');
+    const dupVisa = document.getElementById('duplicataTypeVisa');
+    if (dupCarte) {
+        dupCarte.addEventListener('change', toggleDuplicataTypeDossier);
+    }
+    if (dupVisa) {
+        dupVisa.addEventListener('change', toggleDuplicataTypeDossier);
+    }
+    toggleDuplicataTypeDossier();
 
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
