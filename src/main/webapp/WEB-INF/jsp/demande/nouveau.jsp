@@ -202,8 +202,8 @@
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="referenceCarteOriginale">Référence carte résidente originale</label>
+                            <div class="form-group" id="carteOriginalGroup">
+                                <label for="referenceCarteOriginale">Référence carte résidente originale (dossier à dupliquer)</label>
                                 <div style="display: flex; gap: 8px;">
                                     <input id="referenceCarteOriginale" name="referenceCarteOriginale" type="text" value="${wizard.referenceCarteOriginale}" style="flex: 1;">
                                     <button type="button" class="btn-primary" onclick="searchCarteResident()" style="width: auto; white-space: nowrap;">Rechercher</button>
@@ -215,7 +215,7 @@
                             </div>
 
                             <div class="form-group" id="visaOriginalGroup" style="display:none;">
-                                <label for="referenceVisaOriginale">Référence visa original</label>
+                                <label for="referenceVisaOriginale">Référence visa original (dossier à dupliquer)</label>
                                 <div style="display: flex; gap: 8px;">
                                     <input id="referenceVisaOriginale" name="referenceVisaOriginale" type="text" value="${wizard.referenceVisaOriginale}" style="flex: 1;">
                                     <button type="button" class="btn-primary" onclick="searchVisaRecord()" style="width: auto; white-space: nowrap;">Rechercher</button>
@@ -288,10 +288,10 @@
                     </section>
 
                     <section class="detail-card" id="visaCarteSection" style="display: none;">
-                        <h4>Visa & Carte résident (ancien système)</h4>
+                        <h4>Nouveau Visa & Nouvelle Carte résident</h4>
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="visaReference">Référence visa</label>
+                                <label for="visaReference">Référence nouveau visa</label>
                                 <input id="visaReference" name="visaReference" type="text" value="${wizard.visaReference}">
                             </div>
                             <div class="form-group">
@@ -304,7 +304,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="carteResidentReference">Référence carte résident</label>
+                                <label for="carteResidentReference">Référence nouvelle carte résident</label>
                                 <input id="carteResidentReference" name="carteResidentReference" type="text" value="${wizard.carteResidentReference}">
                             </div>
                             <div class="form-group">
@@ -450,6 +450,7 @@
 
         const typeCarteRadio = document.getElementById('duplicataTypeCarte');
         const typeVisaRadio = document.getElementById('duplicataTypeVisa');
+        const carteOriginalGroup = document.getElementById('carteOriginalGroup');
         const visaOriginalGroup = document.getElementById('visaOriginalGroup');
         const visaOriginalManualFields = document.getElementById('visaOriginalManualFields');
         const visaOriginalManualHint = document.getElementById('visaOriginalManualHint');
@@ -465,6 +466,8 @@
 
         if (refCarte) refCarte.required = !isVisa;
         if (refVisaOriginale) refVisaOriginale.required = isVisa;
+
+        if (carteOriginalGroup) carteOriginalGroup.style.display = isVisa ? 'none' : 'block';
 
         if (visaOriginalGroup) visaOriginalGroup.style.display = isVisa ? 'block' : 'none';
 
