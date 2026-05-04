@@ -271,23 +271,23 @@
                             <div class="form-group form-group-full">
                                 <label for="numeroReferenceVisaTransformable">Référence visa transformable</label>
                                 <div style="display: flex; gap: 8px;">
-                                    <input id="numeroReferenceVisaTransformable" name="numeroReferenceVisaTransformable" type="text" value="${wizard.numeroReferenceVisaTransformable}" ${wizard.idTypeDemande == 3 ? '' : 'required'} style="flex: 1;">
+                                    <input id="numeroReferenceVisaTransformable" name="numeroReferenceVisaTransformable" type="text" value="${wizard.numeroReferenceVisaTransformable}" required style="flex: 1;">
                                     <button type="button" class="btn-primary" onclick="searchVisa()" style="width: auto; white-space: nowrap;">Rechercher</button>
                                 </div>
                                 <span id="searchVisaStatus" style="font-size: 0.85rem; margin-top: 4px; display: block;"></span>
                             </div>
                             <div class="form-group">
                                 <label for="dateDebutVisaTransformable">Date début visa transformable</label>
-                                <input id="dateDebutVisaTransformable" name="dateDebutVisaTransformable" type="date" value="${wizard.dateDebutVisaTransformable}" ${wizard.idTypeDemande == 3 ? '' : 'required'}>
+                                <input id="dateDebutVisaTransformable" name="dateDebutVisaTransformable" type="date" value="${wizard.dateDebutVisaTransformable}" required>
                             </div>
                             <div class="form-group">
                                 <label for="dateExpirationVisaTransformable">Date expiration visa transformable</label>
-                                <input id="dateExpirationVisaTransformable" name="dateExpirationVisaTransformable" type="date" value="${wizard.dateExpirationVisaTransformable}" ${wizard.idTypeDemande == 3 ? '' : 'required'}>
+                                <input id="dateExpirationVisaTransformable" name="dateExpirationVisaTransformable" type="date" value="${wizard.dateExpirationVisaTransformable}" required>
                             </div>
                         </div>
                     </section>
 
-                    <section class="detail-card" id="visaCarteSection" style="display: none;">
+                    <section class="detail-card" id="visaCarteSection" style="display: ${wizard.idTypeDemande == 3 ? 'none' : 'none'};">
                         <h4>Nouveau Visa & Nouvelle Carte résident</h4>
                         <div class="form-grid">
                             <div class="form-group">
@@ -416,6 +416,11 @@
                         }
                     }
                 });
+
+                if (visaTransformableSection) visaTransformableSection.style.display = 'none';
+                if (refVisaTrans) refVisaTrans.required = false;
+                if (dateDebutTrans) dateDebutTrans.required = false;
+                if (dateFinTrans) dateFinTrans.required = false;
             } else {
                 status.textContent = "Non trouvé — veuillez remplir les informations";
                 status.style.color = "var(--red)";
@@ -435,6 +440,11 @@
                         }
                     }
                 });
+
+                if (visaTransformableSection) visaTransformableSection.style.display = 'block';
+                if (refVisaTrans) refVisaTrans.required = true;
+                if (dateDebutTrans) dateDebutTrans.required = true;
+                if (dateFinTrans) dateFinTrans.required = true;
             }
         } catch (error) {
             status.textContent = "Erreur lors de la recherche";
@@ -514,14 +524,9 @@
         const manualHint = document.getElementById('visaOriginalManualHint');
         const manualFields = document.getElementById('visaOriginalManualFields');
         const visaTransformableSection = document.getElementById('visaTransformableSection');
-        const visaCarteSection = document.getElementById('visaCarteSection');
         const refVisaTrans = document.getElementById('numeroReferenceVisaTransformable');
         const dateDebutTrans = document.getElementById('dateDebutVisaTransformable');
         const dateFinTrans = document.getElementById('dateExpirationVisaTransformable');
-        const newVisaDateDebut = document.getElementById('visaDateDebut');
-        const newVisaDateFin = document.getElementById('visaDateFin');
-        const newCarteDateDebut = document.getElementById('carteResidentDateDebut');
-        const newCarteDateFin = document.getElementById('carteResidentDateFin');
         const passeportSection = document.getElementById('passeportSection');
         const demandeurSection = document.getElementById('demandeurSection');
         if (!reference) return;
@@ -595,16 +600,6 @@
                         }
                     }
                 });
-
-                if (visaTransformableSection) visaTransformableSection.style.display = 'none';
-                if (visaCarteSection) visaCarteSection.style.display = 'none';
-                if (refVisaTrans) refVisaTrans.required = false;
-                if (dateDebutTrans) dateDebutTrans.required = false;
-                if (dateFinTrans) dateFinTrans.required = false;
-                if (newVisaDateDebut) newVisaDateDebut.required = false;
-                if (newVisaDateFin) newVisaDateFin.required = false;
-                if (newCarteDateDebut) newCarteDateDebut.required = false;
-                if (newCarteDateFin) newCarteDateFin.required = false;
             } else {
                 if (status) {
                     status.textContent = "Non trouvé — visa venant de l'ancien système";
@@ -656,16 +651,6 @@
                         }
                     }
                 });
-
-                if (visaTransformableSection) visaTransformableSection.style.display = 'block';
-                if (visaCarteSection) visaCarteSection.style.display = 'block';
-                if (refVisaTrans) refVisaTrans.required = true;
-                if (dateDebutTrans) dateDebutTrans.required = true;
-                if (dateFinTrans) dateFinTrans.required = true;
-                if (newVisaDateDebut) newVisaDateDebut.required = true;
-                if (newVisaDateFin) newVisaDateFin.required = true;
-                if (newCarteDateDebut) newCarteDateDebut.required = true;
-                if (newCarteDateFin) newCarteDateFin.required = true;
             }
         } catch (error) {
             if (status) {
@@ -687,14 +672,9 @@
         const manualFields = document.getElementById('carteResidentManualFields');
         const infoNote = document.getElementById('duplicataInfoNote');
         const visaTransformableSection = document.getElementById('visaTransformableSection');
-        const visaCarteSection = document.getElementById('visaCarteSection');
         const refVisaTrans = document.getElementById('numeroReferenceVisaTransformable');
         const dateDebutTrans = document.getElementById('dateDebutVisaTransformable');
         const dateFinTrans = document.getElementById('dateExpirationVisaTransformable');
-        const newVisaDateDebut = document.getElementById('visaDateDebut');
-        const newVisaDateFin = document.getElementById('visaDateFin');
-        const newCarteDateDebut = document.getElementById('carteResidentDateDebut');
-        const newCarteDateFin = document.getElementById('carteResidentDateFin');
         const passeportSection = document.getElementById('passeportSection');
         const demandeurSection = document.getElementById('demandeurSection');
         if (!reference) return;
@@ -971,12 +951,12 @@
                 status.style.color = "var(--red)";
                 if (manualHint) manualHint.style.display = 'block';
 
-                if (visaTransformableSection) visaTransformableSection.style.display = 'block';
+                if (visaTransformableSection) visaTransformableSection.style.display = 'none';
                 if (refVisa) refVisa.required = true;
                 if (dateDebutVisaTransformable) dateDebutVisaTransformable.required = true;
                 if (dateFinVisaTransformable) dateFinVisaTransformable.required = true;
 
-                if (visaCarteSection) visaCarteSection.style.display = 'block';
+                if (visaCarteSection) visaCarteSection.style.display = 'none';
                 if (visaDateDebut) visaDateDebut.required = true;
                 if (visaDateFin) visaDateFin.required = true;
                 if (carteDateDebut) carteDateDebut.required = true;
@@ -1236,12 +1216,12 @@
                 if (passeportNote) passeportNote.style.display = 'none';
 
                 duplicataSection.style.display = 'block';
-                visaTransformableSection.style.display = 'none';
+                visaTransformableSection.style.display = 'block';
                 if (refCarte) refCarte.required = true;
                 if (motifDup) motifDup.required = true;
-                if (refVisa) refVisa.required = false;
-                if (dateDebutVisa) dateDebutVisa.required = false;
-                if (dateFinVisa) dateFinVisa.required = false;
+                if (refVisa) refVisa.required = true;
+                if (dateDebutVisa) dateDebutVisa.required = true;
+                if (dateFinVisa) dateFinVisa.required = true;
                 if (visaCarteSection) visaCarteSection.style.display = 'none';
                 visaCarteFields.forEach(id => {
                     const el = document.getElementById(id);

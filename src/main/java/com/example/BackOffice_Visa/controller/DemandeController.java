@@ -1137,6 +1137,7 @@ public class DemandeController {
                 }
 
                 // Dossier absent (ancien système) -> 2 demandes (parent Nouveau titre Validée + enfant Duplicata Créée)
+                // NB: on crée un seul dossier (Visa OU Carte) lié à la demande parent et référencé dans Demande_Duplicata
                 demandeur = demandeurService.findByContact(wizard.getEmail(), wizard.getTelephone())
                                 .orElseGet(() -> demandeurService.save(construireDemandeur(wizard)));
 
@@ -1207,28 +1208,6 @@ public class DemandeController {
                 demandeParent.setDemandeParent(null);
                 Demande savedDemandeParent = demandeService.save(demandeParent);
 
-                if (wizard.getVisaDateDebut() == null || wizard.getVisaDateFin() == null
-                                || wizard.getCarteResidentDateDebut() == null || wizard.getCarteResidentDateFin() == null) {
-                        throw new IllegalArgumentException(
-                                        "Veuillez renseigner les informations du nouveau visa et de la nouvelle carte résident (dates début/fin).");
-                }
-
-                Visa newVisa = new Visa();
-                newVisa.setDemande(savedDemandeParent);
-                newVisa.setPasseport(passeport);
-                newVisa.setReference(wizard.getVisaReference());
-                newVisa.setDateDebut(wizard.getVisaDateDebut());
-                newVisa.setDateFin(wizard.getVisaDateFin());
-                visaService.save(newVisa);
-
-                CarteResident newCarte = new CarteResident();
-                newCarte.setReference(wizard.getCarteResidentReference());
-                newCarte.setDateDebut(wizard.getCarteResidentDateDebut());
-                newCarte.setDateFin(wizard.getCarteResidentDateFin());
-                newCarte.setDemande(savedDemandeParent);
-                newCarte.setPasseport(passeport);
-                carteResidentService.save(newCarte);
-
                 carteOriginale = null;
                 visaOriginal = null;
                 if ("CARTE".equalsIgnoreCase(typeDossier)) {
@@ -1262,7 +1241,7 @@ public class DemandeController {
                 Demande demandeEnfant = new Demande();
                 demandeEnfant.setDemandeur(demandeur);
                 demandeEnfant.setVisaTransformable(null);
-                demandeEnfant.setTypeVisa(demandeParent.getTypeVisa());
+                demandeEnfant.setTypeVisa(savedDemandeParent.getTypeVisa());
                 demandeEnfant.setTypeDemande(typeDemandeService.findById(TYPE_DEMANDE_DUPLICATA)
                                 .orElseThrow(() -> new IllegalArgumentException("Type demande Duplicata introuvable")));
                 demandeEnfant.setStatut(refStatutDemandeService.findById(STATUT_DEMANDE_CREEE)
