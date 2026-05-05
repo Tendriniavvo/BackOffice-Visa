@@ -65,6 +65,7 @@ import com.example.BackOffice_Visa.service.TypeDemandeService;
 import com.example.BackOffice_Visa.service.TypeVisaService;
 import com.example.BackOffice_Visa.service.VisaService;
 import com.example.BackOffice_Visa.service.VisaTransformableService;
+import com.example.BackOffice_Visa.service.QrCodeService;
 
 @Controller
 @SessionAttributes("demandeWizard")
@@ -98,6 +99,7 @@ public class DemandeController {
         private final CarteResidentService carteResidentService;
         private final DemandeDuplicataService demandeDuplicataService;
         private final VisaService visaService;
+        private final QrCodeService qrCodeService;
 
         public DemandeController(
                         SituationFamilialeService situationFamilialeService,
@@ -117,7 +119,8 @@ public class DemandeController {
                         HistoriqueStatutPasseportService historiqueStatutPasseportService,
                         CarteResidentService carteResidentService,
                         DemandeDuplicataService demandeDuplicataService,
-                        VisaService visaService) {
+                        VisaService visaService,
+                        QrCodeService qrCodeService) {
                 this.situationFamilialeService = situationFamilialeService;
                 this.nationaliteService = nationaliteService;
                 this.demandeurService = demandeurService;
@@ -136,6 +139,7 @@ public class DemandeController {
                 this.carteResidentService = carteResidentService;
                 this.demandeDuplicataService = demandeDuplicataService;
                 this.visaService = visaService;
+                this.qrCodeService = qrCodeService;
         }
 
         @ModelAttribute("demandeWizard")

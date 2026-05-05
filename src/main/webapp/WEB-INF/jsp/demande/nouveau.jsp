@@ -36,6 +36,7 @@
                 <div class="form-alert" style="color:var(--red);background:var(--red-subtle);border-color:rgba(239,68,68,0.25);"><%= request.getAttribute("errorMessage") %></div>
                 <% } %>
 
+
                 <form action="/demandes/nouveau/soumettre" method="post" class="demand-form">
                     <section class="detail-card">
                         <h4>Type de demande</h4>
@@ -1337,6 +1338,7 @@
             overlay.classList.remove('active');
         });
     }
+
 </script>
 </body>
 </html>
