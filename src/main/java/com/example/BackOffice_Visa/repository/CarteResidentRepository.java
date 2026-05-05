@@ -8,4 +8,6 @@ import com.example.BackOffice_Visa.entity.CarteResident;
 
 public interface CarteResidentRepository extends JpaRepository<CarteResident, Integer> {
     Optional<CarteResident> findByReference(String reference);
+
+    Optional<CarteResident> findByDemandeId(Integer demandeId);
 }

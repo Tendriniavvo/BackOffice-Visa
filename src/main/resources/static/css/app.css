@@ -133,9 +133,17 @@ body {
   display:flex; align-items:center; gap:var(--sp-2); background:var(--bg-subtle);
   border:1px solid var(--border-default); border-radius:var(--radius-sm);
   padding:7px var(--sp-4); width:280px;
-  transition:border-color var(--duration) var(--ease),box-shadow var(--duration) var(--ease);
+  transition:all var(--duration) var(--ease);
 }
-.search-bar:focus-within { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-subtle); }
+.search-bar:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--text-tertiary);
+}
+.search-bar:focus-within { 
+  background: var(--bg-surface);
+  border-color:var(--accent); 
+  box-shadow:0 0 0 3px var(--accent-subtle); 
+}
 .search-bar input {
   background:none; border:none; outline:none; color:var(--text-primary);
   font-family:var(--font-sans); font-size:13px; width:100%;
@@ -462,12 +470,18 @@ input[type="file"].file-input::file-selector-button:hover {
   color:var(--text-primary);
   font-family:var(--font-sans);
   font-size:13px;
-  transition:border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+  transition:all var(--duration) var(--ease);
+}
+.form-group input:hover,
+.form-group select:hover {
+  border-color: var(--text-tertiary);
+  background: var(--bg-surface-hover);
 }
 .form-group input:focus,
 .form-group select:focus {
   outline:none;
   border-color:var(--accent);
+  background: var(--bg-surface);
   box-shadow:0 0 0 3px var(--accent-subtle);
 }
 

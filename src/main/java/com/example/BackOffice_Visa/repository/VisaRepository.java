@@ -8,4 +8,6 @@ import com.example.BackOffice_Visa.entity.Visa;
 
 public interface VisaRepository extends JpaRepository<Visa, Integer> {
     Optional<Visa> findByReference(String reference);
+
+    Optional<Visa> findByDemandeId(Integer demandeId);
 }
