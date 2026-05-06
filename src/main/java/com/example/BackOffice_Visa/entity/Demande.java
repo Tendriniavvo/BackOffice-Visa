@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "demande")
@@ -48,6 +49,9 @@ public class Demande {
     @ManyToOne
     @JoinColumn(name = "id_demande_parent")
     private Demande demandeParent;
+
+    @Transient
+    private String qrCodeBase64;
 
     public Integer getId() {
         return id;
@@ -119,5 +123,13 @@ public class Demande {
 
     public void setDemandeParent(Demande demandeParent) {
         this.demandeParent = demandeParent;
+    }
+
+    public String getQrCodeBase64() {
+        return qrCodeBase64;
+    }
+
+    public void setQrCodeBase64(String qrCodeBase64) {
+        this.qrCodeBase64 = qrCodeBase64;
     }
 }

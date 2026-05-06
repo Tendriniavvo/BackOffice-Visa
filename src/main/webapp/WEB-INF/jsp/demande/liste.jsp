@@ -66,9 +66,14 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <c:if test="${demande.statut != null && demande.statut.code == 1}">
-                                                <a class="btn-primary" href="/demandes/${demande.id}/upload">Soumettre dossier</a>
-                                            </c:if>
+                                            <div style="display: flex; gap: 8px; align-items: center;">
+                                                <button class="btn-icon" title="Voir QR Code" onclick="showQRCode('${demande.id}', '${demande.qrCodeBase64}')">
+                                                    <i data-lucide="qr-code"></i>
+                                                </button>
+                                                <c:if test="${demande.statut != null && demande.statut.code == 1}">
+                                                    <a class="btn-primary" href="/demandes/${demande.id}/upload">Soumettre dossier</a>
+                                                </c:if>
+                                            </div>
                                         </td>
                                     </tr>
                                 </c:forEach>
@@ -78,6 +83,28 @@
                     </c:otherwise>
                 </c:choose>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal QR Code -->
+<div id="qrModal" class="modal-overlay" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="card" style="width: 100%; max-width: 400px; padding: 24px; text-align: center; position: relative;">
+        <button onclick="closeQRModal()" style="position: absolute; top: 16px; right: 16px; border: none; background: transparent; cursor: pointer;">
+            <i data-lucide="x"></i>
+        </button>
+        <h3 style="margin-bottom: 8px;">QR Code de la demande <span id="modalDemandeId"></span></h3>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 24px;">
+            Scannez pour accéder au détail sur le FrontOffice.
+        </p>
+        <div style="background: white; padding: 16px; border-radius: 12px; display: inline-block; margin-bottom: 16px;">
+            <img id="qrImage" src="" alt="QR Code" style="width: 200px; height: 200px; display: block;">
+        </div>
+        <div style="margin-top: 16px;">
+            <button class="btn-primary" onclick="downloadQR()">
+                <i data-lucide="download" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+                Télécharger
+            </button>
         </div>
     </div>
 </div>
@@ -134,6 +161,29 @@
             sidebar.classList.remove('open');
             overlay.classList.remove('active');
         });
+    }
+
+    // QR Code functions
+    function showQRCode(id, base64) {
+        document.getElementById('modalDemandeId').innerText = '#' + id;
+        document.getElementById('qrImage').src = base64;
+        document.getElementById('qrModal').style.display = 'flex';
+        lucide.createIcons();
+    }
+
+    function closeQRModal() {
+        document.getElementById('qrModal').style.display = 'none';
+    }
+
+    function downloadQR() {
+        const base64 = document.getElementById('qrImage').src;
+        const id = document.getElementById('modalDemandeId').innerText.replace('#', '');
+        const link = document.createElement('a');
+        link.href = base64;
+        link.download = `qrcode-demande-${id}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 </script>
 </body>

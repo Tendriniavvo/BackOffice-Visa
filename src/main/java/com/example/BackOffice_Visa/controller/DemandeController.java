@@ -154,6 +154,7 @@ public class DemandeController {
                 List<Demande> demandes = demandeService.findAll()
                                 .stream()
                                 .sorted(Comparator.comparing(Demande::getId).reversed())
+                                .peek(d -> d.setQrCodeBase64(qrCodeService.generateQrCodeBase64(d.getId())))
                                 .toList();
                 model.addAttribute("demandes", demandes);
                 return "demande/liste";
