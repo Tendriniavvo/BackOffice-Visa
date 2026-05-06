@@ -202,7 +202,8 @@ public class DemandeController {
                 }
 
                 if (files == null || files.isEmpty()) {
-                        redirectAttributes.addFlashAttribute("errorMessage", "Veuillez sélectionner au moins un fichier.");
+                        redirectAttributes.addFlashAttribute("errorMessage",
+                                        "Veuillez sélectionner au moins un fichier.");
                         return "redirect:/demandes/" + id + "/upload";
                 }
 
@@ -231,10 +232,12 @@ public class DemandeController {
 
                                 DemandePiece dp = demandePieceService.findByDemandeIdAndPieceId(id, pieceId)
                                                 .orElseThrow(() -> new IllegalArgumentException(
-                                                                "Pièce introuvable pour cette demande (pieceId=" + pieceId + ")."));
+                                                                "Pièce introuvable pour cette demande (pieceId="
+                                                                                + pieceId + ")."));
 
                                 String original = StringUtils.cleanPath(
-                                                file.getOriginalFilename() == null ? "file" : file.getOriginalFilename());
+                                                file.getOriginalFilename() == null ? "file"
+                                                                : file.getOriginalFilename());
                                 String filename = pieceId + "_" + System.currentTimeMillis() + "_" + original;
                                 Path target = dir.resolve(filename);
 
@@ -282,14 +285,16 @@ public class DemandeController {
 
                 List<DemandePiece> pieces = demandePieceService.findByDemandeId(id);
                 List<String> manquantes = pieces.stream()
-                                .filter(dp -> dp.getPiece() != null && Boolean.TRUE.equals(dp.getPiece().getObligatoire()))
+                                .filter(dp -> dp.getPiece() != null
+                                                && Boolean.TRUE.equals(dp.getPiece().getObligatoire()))
                                 .filter(dp -> !Boolean.TRUE.equals(dp.getEstFourni()))
                                 .map(dp -> dp.getPiece().getLibelle())
                                 .toList();
 
                 if (!manquantes.isEmpty()) {
                         redirectAttributes.addFlashAttribute("errorMessage",
-                                        "Scan impossible: pièces obligatoires manquantes: " + String.join(", ", manquantes));
+                                        "Scan impossible: pièces obligatoires manquantes: "
+                                                        + String.join(", ", manquantes));
                         return "redirect:/demandes/" + id + "/upload";
                 }
 
@@ -555,7 +560,8 @@ public class DemandeController {
 
                 // Validation Visa Transformable
                 // - Obligatoire pour Nouveau titre
-                // - Pour Transfert: obligatoire uniquement si l'ancien passeport est absent (car on crée une demande parent Nouveau titre)
+                // - Pour Transfert: obligatoire uniquement si l'ancien passeport est absent
+                // (car on crée une demande parent Nouveau titre)
                 // - Non obligatoire pour Duplicata
                 boolean visaTransformableObligatoire = false;
                 if (wizard.getIdTypeDemande() != null) {
@@ -760,7 +766,8 @@ public class DemandeController {
                 RefStatutPasseport statutActif = refStatutPasseportService.findById(STATUT_PASSEPORT_ACTIF)
                                 .orElseThrow(() -> new IllegalArgumentException("Statut passeport actif introuvable"));
 
-                Optional<Passeport> ancienPasseportOpt = passeportService.findByNumero(wizard.getNumeroAncienPasseport());
+                Optional<Passeport> ancienPasseportOpt = passeportService
+                                .findByNumero(wizard.getNumeroAncienPasseport());
                 boolean ancienPasseportTrouve = ancienPasseportOpt.isPresent();
 
                 Demandeur demandeur;
@@ -771,12 +778,14 @@ public class DemandeController {
                                 throw new IllegalArgumentException("L'ancien passeport trouvé n'est pas actif.");
                         }
                         if (p.getDemandeur() == null) {
-                                throw new IllegalArgumentException("L'ancien passeport trouvé n'a pas de demandeur associé.");
+                                throw new IllegalArgumentException(
+                                                "L'ancien passeport trouvé n'a pas de demandeur associé.");
                         }
                         demandeur = p.getDemandeur();
                         ancienPasseport = p;
                 } else {
-                        // SI ABSENT : le demandeur doit être saisi (ou retrouvé) puis on crée l'ancien passeport
+                        // SI ABSENT : le demandeur doit être saisi (ou retrouvé) puis on crée l'ancien
+                        // passeport
                         demandeur = demandeurService.findByContact(wizard.getEmail(), wizard.getTelephone())
                                         .orElseGet(() -> demandeurService.save(construireDemandeur(wizard)));
 
@@ -836,23 +845,27 @@ public class DemandeController {
                                 });
 
                 if (ancienPasseportTrouve) {
-                        // MISE À JOUR VISA TRANSFORMABLE : le visa transformable lié à l'ancien passeport suit le nouveau passeport
+                        // MISE À JOUR VISA TRANSFORMABLE : le visa transformable lié à l'ancien
+                        // passeport suit le nouveau passeport
                         visaTransformableService.findByPasseport(ancienPasseport)
                                         .ifPresent(vt -> {
                                                 vt.setPasseport(nouveauPasseport);
                                                 visaTransformableService.save(vt);
                                         });
 
-                        // CAS 1 : ancien passeport trouvé -> UNE SEULE DEMANDE (Transfert), pas de parent
+                        // CAS 1 : ancien passeport trouvé -> UNE SEULE DEMANDE (Transfert), pas de
+                        // parent
                         Demande demandeUnique = new Demande();
                         demandeUnique.setDemandeur(demandeur);
                         demandeUnique.setVisaTransformable(null);
                         demandeUnique.setTypeVisa(typeVisaService.findById(wizard.getIdTypeVisa())
                                         .orElseThrow(() -> new IllegalArgumentException("Type visa introuvable")));
                         demandeUnique.setTypeDemande(typeDemandeService.findById(TYPE_DEMANDE_TRANSFERT)
-                                        .orElseThrow(() -> new IllegalArgumentException("Type demande Transfert introuvable")));
+                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                        "Type demande Transfert introuvable")));
                         demandeUnique.setStatut(refStatutDemandeService.findById(STATUT_DEMANDE_CREEE)
-                                        .orElseThrow(() -> new IllegalArgumentException("Statut demande Créée introuvable")));
+                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                        "Statut demande Créée introuvable")));
                         demandeUnique.setDateDemande(wizard.getDateDemande());
                         demandeUnique.setDemandeParent(null);
                         Demande savedDemandeUnique = demandeService.save(demandeUnique);
@@ -881,8 +894,10 @@ public class DemandeController {
                         return savedDemandeUnique;
                 }
 
-                // CAS 2 : ancien passeport absent -> DEUX DEMANDES (Parent Nouveau titre + Enfant Transfert)
-                // Enregistrer le visa transformable lié au nouveau passeport (obligatoire pour le parent Nouveau titre)
+                // CAS 2 : ancien passeport absent -> DEUX DEMANDES (Parent Nouveau titre +
+                // Enfant Transfert)
+                // Enregistrer le visa transformable lié au nouveau passeport (obligatoire pour
+                // le parent Nouveau titre)
                 VisaTransformable visaTransformable = new VisaTransformable();
                 visaTransformable.setDemandeur(demandeur);
                 visaTransformable.setPasseport(nouveauPasseport);
@@ -924,7 +939,8 @@ public class DemandeController {
                 demandeTransfertService.save(transfert);
 
                 if (wizard.getVisaDateDebut() == null || wizard.getVisaDateFin() == null
-                                || wizard.getCarteResidentDateDebut() == null || wizard.getCarteResidentDateFin() == null) {
+                                || wizard.getCarteResidentDateDebut() == null
+                                || wizard.getCarteResidentDateFin() == null) {
                         throw new IllegalArgumentException(
                                         "Veuillez renseigner les informations du visa et de la carte résident (dates début/fin).");
                 }
@@ -1038,9 +1054,11 @@ public class DemandeController {
                         demandeUnique.setTypeVisa(typeVisaService.findById(wizard.getIdTypeVisa())
                                         .orElseThrow(() -> new IllegalArgumentException("Type visa introuvable")));
                         demandeUnique.setTypeDemande(typeDemandeService.findById(TYPE_DEMANDE_DUPLICATA)
-                                        .orElseThrow(() -> new IllegalArgumentException("Type demande Duplicata introuvable")));
+                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                        "Type demande Duplicata introuvable")));
                         demandeUnique.setStatut(refStatutDemandeService.findById(STATUT_DEMANDE_CREEE)
-                                        .orElseThrow(() -> new IllegalArgumentException("Statut demande Créée introuvable")));
+                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                        "Statut demande Créée introuvable")));
                         demandeUnique.setDateDemande(wizard.getDateDemande());
                         demandeUnique.setDemandeParent(null);
                         Demande savedDemandeUnique = demandeService.save(demandeUnique);
@@ -1109,9 +1127,11 @@ public class DemandeController {
                         demandeUnique.setTypeVisa(typeVisaService.findById(wizard.getIdTypeVisa())
                                         .orElseThrow(() -> new IllegalArgumentException("Type visa introuvable")));
                         demandeUnique.setTypeDemande(typeDemandeService.findById(TYPE_DEMANDE_DUPLICATA)
-                                        .orElseThrow(() -> new IllegalArgumentException("Type demande Duplicata introuvable")));
+                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                        "Type demande Duplicata introuvable")));
                         demandeUnique.setStatut(refStatutDemandeService.findById(STATUT_DEMANDE_CREEE)
-                                        .orElseThrow(() -> new IllegalArgumentException("Statut demande Créée introuvable")));
+                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                        "Statut demande Créée introuvable")));
                         demandeUnique.setDateDemande(wizard.getDateDemande());
                         demandeUnique.setDemandeParent(null);
                         Demande savedDemandeUnique = demandeService.save(demandeUnique);
@@ -1141,8 +1161,10 @@ public class DemandeController {
                         return savedDemandeUnique;
                 }
 
-                // Dossier absent (ancien système) -> 2 demandes (parent Nouveau titre Validée + enfant Duplicata Créée)
-                // NB: on crée un seul dossier (Visa OU Carte) lié à la demande parent et référencé dans Demande_Duplicata
+                // Dossier absent (ancien système) -> 2 demandes (parent Nouveau titre Validée +
+                // enfant Duplicata Créée)
+                // NB: on crée un seul dossier (Visa OU Carte) lié à la demande parent et
+                // référencé dans Demande_Duplicata
                 demandeur = demandeurService.findByContact(wizard.getEmail(), wizard.getTelephone())
                                 .orElseGet(() -> demandeurService.save(construireDemandeur(wizard)));
 
@@ -1184,7 +1206,8 @@ public class DemandeController {
                         historiqueStatutPasseportService.save(histP);
                 }
 
-                if (wizard.getDateDebutVisaTransformable() == null || wizard.getDateExpirationVisaTransformable() == null
+                if (wizard.getDateDebutVisaTransformable() == null
+                                || wizard.getDateExpirationVisaTransformable() == null
                                 || wizard.getNumeroReferenceVisaTransformable() == null
                                 || wizard.getNumeroReferenceVisaTransformable().isBlank()) {
                         throw new IllegalArgumentException(
@@ -1424,7 +1447,8 @@ public class DemandeController {
                                         demandeur.put("email", d.getEmail());
                                         demandeur.put("adresse", d.getAdresse());
                                         if (d.getSituationFamiliale() != null) {
-                                                demandeur.put("idSituationFamiliale", d.getSituationFamiliale().getId());
+                                                demandeur.put("idSituationFamiliale",
+                                                                d.getSituationFamiliale().getId());
                                         }
                                         if (d.getNationalite() != null) {
                                                 demandeur.put("idNationalite", d.getNationalite().getId());
