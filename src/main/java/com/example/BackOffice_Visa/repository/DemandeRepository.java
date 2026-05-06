@@ -12,4 +12,6 @@ public interface DemandeRepository extends JpaRepository<Demande, Integer> {
     List<Demande> findByPasseportNumero(@Param("numeroPasseport") String numeroPasseport);
 
     List<Demande> findByDemandeParentId(Integer parentId);
+
+    List<Demande> findByDemandeurIdOrderByDateDemandeDesc(Integer demandeurId);
 }

@@ -27,6 +27,10 @@ public class HistoriqueStatutDemandeService {
         return historiqueStatutDemandeRepository.findById(id);
     }
 
+    public List<HistoriqueStatutDemande> findByDemandeId(Integer demandeId) {
+        return historiqueStatutDemandeRepository.findByDemandeIdOrderByDateChangementDesc(demandeId);
+    }
+
     @Transactional
     public HistoriqueStatutDemande save(HistoriqueStatutDemande historiqueStatutDemande) {
         return historiqueStatutDemandeRepository.save(historiqueStatutDemande);

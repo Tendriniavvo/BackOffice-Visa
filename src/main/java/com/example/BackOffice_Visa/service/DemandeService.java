@@ -42,6 +42,10 @@ public class DemandeService {
         return demandeRepository.findById(id);
     }
 
+    public List<Demande> findByDemandeurId(Integer demandeurId) {
+        return demandeRepository.findByDemandeurIdOrderByDateDemandeDesc(demandeurId);
+    }
+
     public Optional<DemandeDetailDto> getDemandeDetail(Integer id) {
         return demandeRepository.findById(id).map(d -> {
             Visa visa = visaRepository.findByDemandeId(d.getId()).orElse(null);

@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.BackOffice_Visa.entity.Demande;
 import com.example.BackOffice_Visa.model.DemandeDetailDto;
 import com.example.BackOffice_Visa.model.DemandeListItemDto;
+import com.example.BackOffice_Visa.model.HistoriqueStatutDemandeDto;
 import com.example.BackOffice_Visa.service.DemandeService;
+import com.example.BackOffice_Visa.service.HistoriqueStatutDemandeService;
 import com.example.BackOffice_Visa.service.QrCodeService;
 
 @RestController
@@ -23,10 +25,13 @@ public class DemandeApiController {
 
     private final DemandeService demandeService;
     private final QrCodeService qrCodeService;
+    private final HistoriqueStatutDemandeService historiqueStatutDemandeService;
 
-    public DemandeApiController(DemandeService demandeService, QrCodeService qrCodeService) {
+    public DemandeApiController(DemandeService demandeService, QrCodeService qrCodeService,
+            HistoriqueStatutDemandeService historiqueStatutDemandeService) {
         this.demandeService = demandeService;
         this.qrCodeService = qrCodeService;
+        this.historiqueStatutDemandeService = historiqueStatutDemandeService;
     }
 
     private DemandeListItemDto mapToListItemDto(Demande d) {
@@ -70,11 +75,31 @@ public class DemandeApiController {
                 .toList();
     }
 
+    @GetMapping("/demandes/demandeur/{demandeurId}")
+    public List<DemandeListItemDto> listDemandesByDemandeur(@PathVariable("demandeurId") Integer demandeurId) {
+        return demandeService.findByDemandeurId(demandeurId)
+                .stream()
+                .map(this::mapToListItemDto)
+                .toList();
+    }
+
     @GetMapping("/demandes/{id}")
     public ResponseEntity<?> getDemande(@PathVariable("id") Integer id) {
         return demandeService.getDemandeDetail(id)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(404).body(Map.of("message", "Demande introuvable")));
+    }
+
+    @GetMapping("/demandes/{id}/historique")
+    public List<HistoriqueStatutDemandeDto> getHistoriqueStatut(@PathVariable("id") Integer id) {
+        return historiqueStatutDemandeService.findByDemandeId(id)
+                .stream()
+                .map(h -> new HistoriqueStatutDemandeDto(
+                        h.getId(),
+                        h.getStatut() != null ? h.getStatut().getCode() : null,
+                        h.getStatut() != null ? h.getStatut().getLibelle() : null,
+                        h.getDateChangement()))
+                .toList();
     }
 
     /**
