@@ -29,7 +29,7 @@ CREATE TABLE Type_demande (
 INSERT INTO Type_demande (id, libelle) VALUES 
 (1, 'Demande nouveau titre'),
 (2, 'Transfert VISA'),
-(3, 'Duplicata carte residant');
+(3, 'Duplicata CR ou Visa');
 
 CREATE TABLE piece_justificative (
     id SERIAL PRIMARY KEY,

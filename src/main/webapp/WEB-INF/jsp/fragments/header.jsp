@@ -1,6 +1,6 @@
 <header class="topbar">
     <button class="menu-toggle" id="menuToggle" aria-label="Menu"><i data-lucide="menu" style="width:20px;height:20px"></i></button>
-    <div class="topbar-title">Tableau de Bord</div>
+    <div class="topbar-title">ETU : 3127 - 3131 - 3163</div>
     <div class="search-bar">
         <span style="display:flex;color:var(--text-tertiary)"><i data-lucide="search" style="width:16px;height:16px"></i></span>
         <input type="text" placeholder="Rechercher un dossier, demandeur...">
